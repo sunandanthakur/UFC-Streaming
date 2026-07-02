@@ -92,9 +92,13 @@ app.post("/api/sync-admin-role", async (req, res) => {
 
 app.use(express.static(__dirname));
 
-app.listen(port, "0.0.0.0", () => {
-  console.log(`UFC Stream running on http://localhost:${port}`);
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn("Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to .env");
-  }
-});
+if (process.env.VERCEL !== '1') {
+  app.listen(port, "0.0.0.0", () => {
+    console.log(`UFC Stream running on http://localhost:${port}`);
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.warn("Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to .env");
+    }
+  });
+}
+
+module.exports = app;
