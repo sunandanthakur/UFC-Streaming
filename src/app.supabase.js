@@ -1563,7 +1563,8 @@ async function loginUser(event) {
   });
   
   if (error) {
-    if (msgEl) msgEl.textContent = error.message;
+    const text = error.message || error.error_description || JSON.stringify(error);
+    if (msgEl) msgEl.textContent = text === "{}" ? "Invalid login credentials." : text;
     return;
   }
   
@@ -1597,7 +1598,8 @@ async function signUpUser(event) {
   });
   
   if (error) {
-    if (msgEl) msgEl.textContent = error.message;
+    const text = error.message || error.error_description || JSON.stringify(error);
+    if (msgEl) msgEl.textContent = text === "{}" ? "Sign up failed." : text;
   } else {
     if (msgEl) {
       msgEl.style.color = "#00ff00";
@@ -1624,7 +1626,8 @@ async function loginAdmin(event) {
   });
   
   if (error) {
-    if (msgEl) msgEl.textContent = error.message;
+    const text = error.message || error.error_description || JSON.stringify(error);
+    if (msgEl) msgEl.textContent = text === "{}" ? "Invalid admin credentials." : text;
     return;
   }
 
