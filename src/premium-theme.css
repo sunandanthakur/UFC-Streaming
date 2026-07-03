@@ -117,7 +117,7 @@
   justify-content: center;
   align-items: center;
   text-align: center;
-  background: url('assets/fan-khabib-vs-conor.png') center/cover no-repeat;
+  background: url('assets/fan-khabib-vs-conor.png') top center/cover no-repeat;
   position: relative;
 }
 .hero-pro-overlay {
@@ -680,6 +680,14 @@
   .search-box {
     display: none; /* Simplify topbar for mobile */
   }
+  .hero-pro {
+    background-position: 50% 20%;
+    min-height: auto;
+    padding-bottom: 60px;
+  }
+  .hero-pro-content {
+    margin-top: 100px;
+  }
   .hero-title {
     font-size: 3rem;
   }
@@ -752,6 +760,18 @@
 }
 
 @media (max-width: 480px) {
+  .hero-title {
+    font-size: 2.2rem;
+  }
+  .hero-desc {
+    font-size: 0.95rem;
+  }
+  .hero-actions {
+    width: 100%;
+  }
+  .hero-actions button {
+    width: 100%;
+  }
   .admin-top-stats {
     grid-template-columns: 1fr;
   }
