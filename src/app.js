@@ -133,7 +133,7 @@ async function loadEvents() {
   if (!client) {
     if (!sharedEventsWarningShown) {
       sharedEventsWarningShown = true;
-      toast("Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to .env, then restart the server.");
+      toast("Service unavailable.");
     }
     eventsLoadInFlight = false;
     render();
@@ -220,7 +220,7 @@ function eventBadge(event) {
 
 function supabaseSetupBanner() {
   if (isSupabaseReady()) return "";
-  return `<div class="supabase-banner">Supabase is not configured yet. Copy <code>env.supabase.example</code> values into <code>.env</code>, run the SQL in <code>supabase/schema.sql</code>, then restart with <code>npm start</code>.</div>`;
+  return `<div class="supabase-banner">Service unavailable. Please try again later.</div>`;
 }
 
 function topbar() {
@@ -642,7 +642,7 @@ function renderFans() {
 async function loginUser(event) {
   event.preventDefault();
   const client = getSupabaseClient();
-  if (!client) return toast("Supabase is not configured.");
+  if (!client) return toast("Service unavailable.");
   const data = Object.fromEntries(new FormData(event.target));
   const { error } = await client.auth.signInWithPassword({
     email: String(data.email).trim(),
@@ -655,7 +655,7 @@ async function loginUser(event) {
 async function signUpUser(event) {
   event.preventDefault();
   const client = getSupabaseClient();
-  if (!client) return toast("Supabase is not configured.");
+  if (!client) return toast("Service unavailable.");
   const data = Object.fromEntries(new FormData(event.target));
   const msgEl = event.target.querySelector(".form-message");
   const { data: signUpData, error } = await client.auth.signUp({
@@ -704,7 +704,7 @@ function setAuthMode(mode) {
 
 async function uploadFightVideo(file) {
   const client = getSupabaseClient();
-  if (!client) throw new Error("Supabase is not configured.");
+  if (!client) throw new Error("Service unavailable.");
   const extension = file.name.includes(".") ? file.name.slice(file.name.lastIndexOf(".")) : ".mp4";
   const path = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`;
   const { error } = await client.storage.from("fight-videos").upload(path, file, {

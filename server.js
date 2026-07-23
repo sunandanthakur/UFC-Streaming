@@ -138,7 +138,7 @@ function normalizeSportsDataEvent(event, detail) {
 
 app.get("/api/mma/events", async (req, res) => {
   if (!sportsDataMmaApiKey) {
-    return res.status(500).json({ error: "SportsData.io MMA API key is not configured." });
+    return res.status(500).json({ error: "Service unavailable." });
   }
 
   const requestedSeason = Number(req.query.season);
@@ -215,7 +215,7 @@ function normalizeSportsDataFighter(fighter) {
 
 app.get("/api/mma/fighters", async (_req, res) => {
   if (!sportsDataMmaApiKey) {
-    return res.status(500).json({ error: "SportsData.io MMA API key is not configured." });
+    return res.status(500).json({ error: "Service unavailable." });
   }
 
   try {
@@ -261,7 +261,7 @@ const citoImageCache = new Map();
 
 app.get("/api/mma/fighters/:slug/image", async (req, res) => {
   if (!citoApiKey) {
-    return res.status(500).send("Cito API key missing");
+    return res.status(500).send("Service unavailable.");
   }
   const slug = req.params.slug;
   if (!slug) return res.status(400).send("Missing slug");
@@ -300,7 +300,7 @@ app.get("/api/mma/fighters/:slug/image", async (req, res) => {
 
 app.get("/api/mma/fighters/:slug", async (req, res) => {
   if (!citoApiKey) {
-    return res.status(500).json({ error: "Cito API key is not configured." });
+    return res.status(500).json({ error: "Service unavailable." });
   }
   const slug = req.params.slug;
   if (!slug) return res.status(400).json({ error: "Missing slug" });
@@ -324,7 +324,7 @@ app.get("/api/mma/fighters/:slug", async (req, res) => {
 
 app.get("/api/mma/news", async (_req, res) => {
   if (!sportsDataMmaApiKey) {
-    return res.status(500).json({ error: "SportsData.io MMA API key is not configured." });
+    return res.status(500).json({ error: "Service unavailable." });
   }
 
   try {
@@ -362,7 +362,7 @@ app.get("/api/mma/news", async (_req, res) => {
 
 app.post("/api/sync-admin-role", async (req, res) => {
   if (!supabaseUrl || !supabaseAnonKey) {
-    return res.status(503).json({ error: "Supabase is not configured." });
+    return res.status(503).json({ error: "Service unavailable." });
   }
 
   const authHeader = req.headers.authorization || "";
