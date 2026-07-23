@@ -528,8 +528,7 @@ function eventBadge(event) {
 }
 
 function supabaseSetupBanner() {
-  if (isSupabaseReady()) return "";
-  return `<div class="supabase-banner">Supabase is not configured yet. Copy <code>env.supabase.example</code> values into <code>.env</code>, run the SQL in <code>supabase/schema.sql</code>, then restart with <code>npm start</code>.</div>`;
+  return "";
 }
 
 function topbar() {
@@ -1972,7 +1971,7 @@ async function loginUser(event) {
   
   const client = getSupabaseClient();
   if (!client) {
-    if (msgEl) msgEl.textContent = "Supabase is not configured.";
+    if (msgEl) msgEl.textContent = "Service unavailable.";
     return;
   }
   
@@ -2002,7 +2001,7 @@ async function signUpUser(event) {
   
   const client = getSupabaseClient();
   if (!client) {
-    if (msgEl) msgEl.textContent = "Supabase is not configured.";
+    if (msgEl) msgEl.textContent = "Service unavailable.";
     return;
   }
   
@@ -2046,7 +2045,7 @@ async function loginAdmin(event) {
   
   const client = getSupabaseClient();
   if (!client) {
-    if (msgEl) msgEl.textContent = "Supabase is not configured.";
+    if (msgEl) msgEl.textContent = "Service unavailable.";
     return;
   }
   
@@ -2088,7 +2087,7 @@ async function loginWithProvider(provider) {
   const client = getSupabaseClient();
   if (!client) {
     const msgEl = document.getElementById("auth-message");
-    if (msgEl) msgEl.textContent = "Supabase is not configured.";
+    if (msgEl) msgEl.textContent = "Service unavailable.";
     return;
   }
   const { error } = await client.auth.signInWithOAuth({ provider });
@@ -2203,7 +2202,7 @@ async function fetchAdminUsers() {
 
 async function uploadEventThumbnail(file) {
   const client = getSupabaseClient();
-  if (!client) throw new Error("Supabase is not configured.");
+  if (!client) throw new Error("Service unavailable.");
   const extension = file.name.includes(".") ? file.name.slice(file.name.lastIndexOf(".")) : ".jpg";
   const path = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`;
   const { error } = await client.storage.from("event-thumbnails").upload(path, file, {
@@ -2218,7 +2217,7 @@ async function uploadEventThumbnail(file) {
 
 async function uploadFightVideo(file) {
   const client = getSupabaseClient();
-  if (!client) throw new Error("Supabase is not configured.");
+  if (!client) throw new Error("Service unavailable.");
   const extension = file.name.includes(".") ? file.name.slice(file.name.lastIndexOf(".")) : ".mp4";
   const path = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`;
   const { error } = await client.storage.from("fight-videos").upload(path, file, {
