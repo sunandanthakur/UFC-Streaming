@@ -278,8 +278,10 @@ app.get("/api/mma/fighters/:slug/image", async (req, res) => {
     });
     
     if (!response.ok) {
-      citoImageCache.set(slug, null);
-      return res.status(404).send("Fighter not found in Cito API");
+      if (response.status === 404) {
+        citoImageCache.set(slug, null);
+      }
+      return res.status(response.status).send(response.status === 429 ? "Rate limited by Cito API" : "Fighter not found in Cito API");
     }
 
     const payload = await response.json();
@@ -311,7 +313,7 @@ app.get("/api/mma/fighters/:slug", async (req, res) => {
     });
     
     if (!response.ok) {
-      return res.status(response.status).json({ error: "Fighter not found in Cito API" });
+      return res.status(response.status).json({ error: response.status === 429 ? "Rate limited by Cito API" : "Fighter not found in Cito API" });
     }
 
     const payload = await response.json();
