@@ -657,7 +657,8 @@ async function signUpUser(event) {
   const client = getSupabaseClient();
   if (!client) return toast("Supabase is not configured.");
   const data = Object.fromEntries(new FormData(event.target));
-  const { error } = await client.auth.signUp({
+  const msgEl = event.target.querySelector(".form-message");
+  const { data: signUpData, error } = await client.auth.signUp({
     email: String(data.email).trim(),
     password: String(data.password),
     options: {
@@ -666,8 +667,27 @@ async function signUpUser(event) {
       }
     }
   });
-  if (error) toast(error.message);
-  else toast("Account created. Check your email if confirmation is enabled.");
+
+  if (error) {
+    const text = error.message || error.error_description || JSON.stringify(error);
+    if (msgEl) {
+      msgEl.style.color = "#e10600";
+      msgEl.textContent = text === "{}" ? "Sign up failed." : text;
+    }
+  } else {
+    if (signUpData?.session) {
+      await applySessionUser(signUpData.user);
+      if (msgEl) {
+        msgEl.style.color = "#00ff00";
+        msgEl.textContent = "Account created and signed in successfully!";
+      }
+    } else {
+      if (msgEl) {
+        msgEl.style.color = "#00ff00";
+        msgEl.textContent = "Account created. Please sign in.";
+      }
+    }
+  }
 }
 
 async function logoutUser() {

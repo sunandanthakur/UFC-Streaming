@@ -41,20 +41,19 @@ window.openRankingsModal = function(type, champStr) {
     `;
   } else if (type === 'news') {
     titleEl.textContent = 'Latest Rankings News';
-    bodyEl.innerHTML = `
-      <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
-        <h4 style="margin:0 0 8px 0; color:#fff;">UFC Implements fully Algorithmic "Meta" Rankings</h4>
-        <p style="margin:0; font-size:0.9rem; color:#888;">June 20, 2026 - The long-awaited transition replaces the traditional media panel with an AI-driven, data-heavy algorithm that adjusts instantly post-fight.</p>
-      </div>
-      <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
-        <h4 style="margin:0 0 8px 0; color:#fff;">Pound-for-Pound Shakeup After Massive Weekend</h4>
-        <p style="margin:0; font-size:0.9rem; color:#888;">June 14, 2026 - With Justin Gaethje and Ciryl Gane securing major finishes, the P4P board sees a dramatic mathematical shift.</p>
-      </div>
-      <div style="margin-bottom: 0;">
-        <h4 style="margin:0 0 8px 0; color:#fff;">New System Penalizes Inactivity</h4>
-        <p style="margin:0; font-size:0.9rem; color:#888;">The Meta system enforces a strict penalty curve for fighters inactive over 12 months, radically shaking up the top 10s of several stagnant divisions.</p>
-      </div>
-    `;
+    bodyEl.innerHTML = mmaNewsState.loading
+      ? '<p style="color:#aaa; line-height:1.6;">Loading SportsData.io MMA news...</p>'
+      : (mmaNewsState.news.length ? mmaNewsState.news.slice(0, 10).map((item) => `
+          <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+            <h4 style="margin:0 0 8px 0; color:#fff;">${item.Title || item.Headline || "MMA News Update"}</h4>
+            <p style="margin:0; font-size:0.9rem; color:#888;">${item.Updated || item.TimeAgo || item.Published || item.Created || "SportsData.io"} ${item.Content ? `- ${item.Content}` : ""}</p>
+          </div>
+        `).join("") : liveFighterUpdateItems().map((item) => `
+          <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+            <h4 style="margin:0 0 8px 0; color:#fff;">${item.title}</h4>
+            <p style="margin:0; font-size:0.9rem; color:#888;">${item.detail}</p>
+          </div>
+        `).join(""));
   } else if (type === 'profile') {
     try {
       const champ = JSON.parse(decodeURIComponent(champStr));
@@ -123,7 +122,8 @@ const icons = {
   save: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>',
   edit: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
   trash: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
-  broadcast: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48 0a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>'
+  broadcast: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48 0a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>',
+  lock: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
 };
 
 const posterThemes = [
@@ -162,9 +162,16 @@ let authUser = null;
 let userProfile = null;
 let authMode = "userLogin";
 let eventsLoadInFlight = false;
+let profileModalState = { open: false, loading: false, data: null, error: null };
 let sharedEventsWarningShown = false;
 let activeWeightClass = "Pound-for-Pound";
+let eventFilter = "All Events";
+let rankAccordionLeft = false;
+let rankAccordionRight = false;
 let adminStats = { active_users: 0, live_events: 0, total_revenue: 0, total_ppv_sales: 0 };
+let mmaFightersState = { fighters: [], loading: false, error: "", fetchedAt: "", query: "" };
+let mmaNewsState = { news: [], loading: false, error: "", fetchedAt: "" };
+let mmaFighterSearchTimer;
 let adminTab = "dashboard";
 let adminUsersList = [];
 let adminEventDraft = {
@@ -298,6 +305,22 @@ function mapEvent(row) {
   };
 }
 
+function mapSportsDataEvent(row) {
+  return {
+    id: row.id || `sportsdata-${row.sportsDataEventId || row.EventId}`,
+    title: row.title || row.Name || row.ShortName || "UFC Event",
+    description: row.description || "",
+    thumbnail: row.thumbnail || row.ImageUrl || row.PhotoUrl || "",
+    streamUrl: row.streamUrl || row.stream_url || "",
+    venue: row.venue || row.Venue || row.Location || "UFC",
+    eventDate: row.eventDate || row.DateTime || row.Day || "",
+    viewerCount: Number(row.viewerCount || row.viewer_count || 0),
+    status: row.status || "Upcoming",
+    theme: row.theme || "",
+    fight_card: row.fight_card || row.fightCard || ""
+  };
+}
+
 async function syncAdminRoleOnServer() {
   const client = getSupabaseClient();
   if (!client || !authUser || !isConfiguredAdminEmail(authUser.email)) return null;
@@ -351,42 +374,63 @@ async function loadEvents() {
   if (eventsLoadInFlight) return;
   eventsLoadInFlight = true;
 
-  const client = getSupabaseClient();
-  if (!client) {
-    if (!sharedEventsWarningShown) {
-      sharedEventsWarningShown = true;
-      toast("Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to .env, then restart the server.");
-    }
-    eventsLoadInFlight = false;
-    render();
-    return;
-  }
-
   try {
-    const { data, error } = await client
-      .from("events")
-      .select("*")
-      .order("event_date", { ascending: true });
-    if (error) throw error;
-    state.events = (data || [])
-      .map(mapEvent)
-      .filter((event) => !REMOVED_DEMO_TITLES.has(event.title));
-      
-    const urlParams = new URLSearchParams(window.location.search);
-    const sharedEventId = urlParams.get('event');
-    if (sharedEventId && state.events.some(e => e.id === sharedEventId)) {
-      activeEventId = sharedEventId;
-      if (route === "home") {
-        route = "stream";
+    const response = await fetch(`/api/mma/events?t=${Date.now()}`, { cache: "no-store" });
+    const payload = await response.json().catch(() => ({}));
+    if (response.ok && Array.isArray(payload.events)) {
+      state.events = payload.events
+        .map(mapSportsDataEvent)
+        .filter((event) => event.title && !REMOVED_DEMO_TITLES.has(event.title));
+      sharedEventsWarningShown = false;
+      const urlParams = new URLSearchParams(window.location.search);
+      const sharedEventId = urlParams.get("event");
+      if (sharedEventId && state.events.some((event) => event.id === sharedEventId)) {
+        activeEventId = sharedEventId;
+        if (route === "home") route = "stream";
+      } else {
+        const upcoming = state.events.find((event) => event.status !== "Ended");
+        activeEventId = state.events.find((event) => event.status === "Live")?.id || upcoming?.id || state.events[0]?.id;
       }
-    } else {
-      activeEventId = state.events.find((event) => event.status === "Live")?.id || state.events[0]?.id;
+      return;
     }
-    sharedEventsWarningShown = false;
-  } catch (error) {
-    if (!sharedEventsWarningShown) {
-      sharedEventsWarningShown = true;
-      toast(`Could not load shared events: ${error.message}`);
+    if (payload.error) throw new Error(payload.error);
+    throw new Error(`SportsData.io schedule failed with status ${response.status}`);
+  } catch (apiError) {
+    const client = getSupabaseClient();
+    if (!client) {
+      if (!sharedEventsWarningShown) {
+        sharedEventsWarningShown = true;
+        toast(`Could not load SportsData.io events: ${apiError.message}`);
+      }
+      return;
+    }
+
+    try {
+      const { data, error } = await client
+        .from("events")
+        .select("*")
+        .order("event_date", { ascending: true });
+      if (error) throw error;
+      state.events = (data || [])
+        .map(mapEvent)
+        .filter((event) => !REMOVED_DEMO_TITLES.has(event.title));
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const sharedEventId = urlParams.get('event');
+      if (sharedEventId && state.events.some(e => e.id === sharedEventId)) {
+        activeEventId = sharedEventId;
+        if (route === "home") {
+          route = "stream";
+        }
+      } else {
+        activeEventId = state.events.find((event) => event.status === "Live")?.id || state.events[0]?.id;
+      }
+      sharedEventsWarningShown = false;
+    } catch (error) {
+      if (!sharedEventsWarningShown) {
+        sharedEventsWarningShown = true;
+        toast(`Could not load event data: ${error.message}`);
+      }
     }
   } finally {
     eventsLoadInFlight = false;
@@ -394,13 +438,40 @@ async function loadEvents() {
   }
 }
 
+function toggleMobileMenu(forceClose = false) {
+  const dropdown = document.getElementById('mobile-nav-dropdown');
+  if (!dropdown) return;
+  if (forceClose === false && dropdown.style.display !== 'none') {
+    dropdown.style.display = 'none';
+  } else if (forceClose === true) {
+    dropdown.style.display = 'none';
+  } else {
+    dropdown.style.display = 'flex';
+  }
+}
+
+function toggleAdminSidebar() {
+  const links = document.getElementById('admin-sidebar-links');
+  if (!links) return;
+  if (links.style.display === 'flex') {
+    links.style.display = 'none';
+  } else {
+    links.style.display = 'flex';
+  }
+}
+
+
+
 function setRoute(nextRoute, eventId) {
-  if (!authUser && nextRoute !== "profile") {
+  if (!authUser && nextRoute !== "profile" && nextRoute !== "fighters") {
     route = "profile";
   } else {
     route = nextRoute;
   }
   if (eventId) activeEventId = eventId;
+
+
+
   render();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -433,8 +504,13 @@ function countdown(dateValue) {
 }
 
 function posterStyle(event, index = 0) {
-  const poster = event.thumbnail ? `url(${event.thumbnail}) center/cover` : event.theme || posterThemes[index % posterThemes.length];
+  const image = eventImage(event, null);
+  const poster = image ? `url(${image})` : event.theme || posterThemes[index % posterThemes.length];
   return `style="--poster:${poster}"`;
+}
+
+function eventImage(event, fallback = 'assets/fan-khabib-vs-conor.png') {
+  return event?.thumbnail || event?.originalImage || event?.poster_url || fallback;
 }
 
 function eventPoster(event, index = 0) {
@@ -467,14 +543,25 @@ function topbar() {
           <p>STREAM PRO</p>
         </div>
       </div>
+      <button class="mobile-menu-btn" onclick="toggleMobileMenu()" title="Menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
       <nav class="top-nav-links">
-        <a class="${route === 'home' ? 'active' : ''}" onclick="setRoute('home')">Home</a>
-        <a class="${route === 'live' ? 'active' : ''}" onclick="setRoute('live')">Live Events</a>
-        <a class="${route === 'events' ? 'active' : ''}" onclick="setRoute('events')">Schedule</a>
-        <a class="${route === 'rankings' ? 'active' : ''}" onclick="setRoute('rankings')">Rankings</a>
-        <a class="${route === 'library' ? 'active' : ''}" onclick="setRoute('library')">Fight Library</a>
-        <a class="${route === 'fans' ? 'active' : ''}" onclick="setRoute('fans')">Community</a>
+        <a class="${route === 'home' ? 'active' : ''}" onclick="setRoute('home'); toggleMobileMenu(false)">Home</a>
+        <a class="${route === 'live' ? 'active' : ''}" onclick="setRoute('live'); toggleMobileMenu(false)">Live Events</a>
+        <a class="${route === 'events' ? 'active' : ''}" onclick="setRoute('events'); toggleMobileMenu(false)">Schedule</a>
+        <a class="${route === 'rankings' ? 'active' : ''}" onclick="setRoute('rankings'); toggleMobileMenu(false)">Rankings</a>
+        <a class="${route === 'fighters' ? 'active' : ''}" onclick="setRoute('fighters'); toggleMobileMenu(false)">Fighters</a>
+        <a class="${route === 'fans' ? 'active' : ''}" onclick="setRoute('fans'); toggleMobileMenu(false)">Community</a>
       </nav>
+      <div id="mobile-nav-dropdown" class="mobile-nav-dropdown" style="display: none;">
+        <a class="${route === 'home' ? 'active' : ''}" onclick="setRoute('home'); toggleMobileMenu(false)">Home</a>
+        <a class="${route === 'live' ? 'active' : ''}" onclick="setRoute('live'); toggleMobileMenu(false)">Live Events</a>
+        <a class="${route === 'events' ? 'active' : ''}" onclick="setRoute('events'); toggleMobileMenu(false)">Schedule</a>
+        <a class="${route === 'rankings' ? 'active' : ''}" onclick="setRoute('rankings'); toggleMobileMenu(false)">Rankings</a>
+        <a class="${route === 'fighters' ? 'active' : ''}" onclick="setRoute('fighters'); toggleMobileMenu(false)">Fighters</a>
+        <a class="${route === 'fans' ? 'active' : ''}" onclick="setRoute('fans'); toggleMobileMenu(false)">Community</a>
+      </div>
       <div class="top-actions">
         <div class="search-box">
           ${icons.search}
@@ -510,6 +597,7 @@ function bottomNav() {
     ["live", "Live", icons.play],
     ["events", "Events", icons.calendar],
     ["rankings", "Rankings", icons.star],
+    ["fighters", "Fighters", icons.user],
     ["fans", "Community", icons.user],
     ["profile", "Profile", icons.user]
   ].filter(Boolean);
@@ -531,63 +619,135 @@ function renderHome() {
   const upcomingTitle = upcoming ? upcoming.title : "UFC 317";
   const upcomingDateStr = upcoming ? new Date(upcoming.eventDate).toLocaleDateString(undefined, {weekday: 'long'}) : "This Saturday";
   
+  const upcomingDateObj = upcoming && upcoming.eventDate ? new Date(upcoming.eventDate) : new Date();
+  const upcomingFullDate = isNaN(upcomingDateObj.getTime()) ? "TBA" : 
+    `${upcomingDateObj.toLocaleDateString('en-US', {weekday: 'short', day: 'numeric', month: 'short'})} • ${upcomingDateObj.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'})}`;
+  
+  const upcomings = state.events
+    .filter(e => e.status !== "Ended")
+    .sort((a,b) => new Date(a.eventDate) - new Date(b.eventDate));
+
   return `
-    <main class="hero-pro">
-      <div class="hero-pro-overlay"></div>
-      <div class="hero-pro-content">
-        <p class="hero-eyebrow">WELCOME TO UFC STREAM PRO</p>
-        <h2 class="hero-title">THE OCTAGON<span class="red-text">AWAITS</span></h2>
-        <p class="hero-desc">Watch live events, exclusive content, fight replays, rankings, fighter stats and more. Anytime. Anywhere.</p>
-        <div class="hero-actions">
-          <button class="btn-red" onclick="setRoute('live')">${icons.play} Watch Live</button>
-          <button class="btn-outline" onclick="setRoute('events')">Explore Events</button>
+    <div class="home-page-container">
+      <main class="hero-pro" style="min-height: 75vh;">
+        <div class="hero-pro-overlay"></div>
+        <div class="hero-pro-content">
+          <p class="hero-eyebrow">WELCOME TO UFC</p>
+          <h2 class="hero-title">THE OCTAGON<br/><span class="red-text">AWAITS</span></h2>
+          <p class="hero-desc">Watch live events, exclusive content,<br/>fight replays and more.</p>
         </div>
-      </div>
-      <div class="hero-stats-row">
-        <div class="stat-card-pro">
-          <div class="icon-box" style="color: #e10600;">
-            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M17 15.5A5.5 5.5 0 0 1 11.5 21 5.5 5.5 0 0 1 6 15.5C6 11.5 11.5 2 11.5 2s5.5 9.5 5.5 13.5z" fill="currentColor"/></svg>
+        
+        <div class="mobile-hero-cards">
+          <!-- Live Link Card -->
+          <div class="live-link-card">
+            <div class="card-top">
+              <div class="icon-circle red-bg">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2c0 0-5 6.5-5 11a5 5 0 0 0 10 0c0-4.5-5-11-5-11Z"/></svg>
+              </div>
+              <div class="link-info">
+                <div class="url-row">
+                  <span class="url-text" style="font-size: 1rem; color: #fff; font-weight: 700;">${upcomingTitle}</span>
+                  <button class="copy-btn" onclick="navigator.clipboard.writeText('https://ufcstream.vercel.app/?event=1594e5')" title="Copy Link">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  </button>
+                </div>
+                <div class="date-row">${upcomingFullDate}</div>
+              </div>
+            </div>
+            <button class="watch-live-btn" onclick="setRoute('live')">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              Watch Live Now
+            </button>
           </div>
-          <div>
-            <h4>${upcomingTitle}</h4>
-            <p>${upcomingDateStr}</p>
+
+          <!-- Viewers Card -->
+          <div class="viewers-card">
+            <div class="icon-circle blue-bg">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="viewers-info">
+              <div class="viewers-count">120K+</div>
+              <div class="viewers-label">Fans Watching Now</div>
+            </div>
+            <div class="viewers-avatars">
+              <img src="assets/fan-khabib-nurmagomedov.png" class="avatar" />
+              <img src="assets/fan-conor-mcgregor-flex.jpg" class="avatar" />
+              <img src="assets/fan-islam-makhachev.png" class="avatar" />
+              <div class="avatar-count">99+</div>
+            </div>
           </div>
         </div>
-        <div class="stat-card-pro">
-          <div class="icon-box" style="color: #4da6ff;">
-            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
-          <div>
-            <h4>120K+</h4>
-            <p>Fans Watching Now</p>
-          </div>
+      </main>
+
+      <section class="home-events-section" style="padding: 24px; max-width: 1400px; margin: 0 auto; padding-bottom: 120px;">
+        <div class="sched-section-header" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="sched-section-title" style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #fff;">UPCOMING EVENTS</h3>
+          <a class="sched-section-link" onclick="setRoute('events')" style="cursor: pointer; color: #e10600; font-size: 0.9rem; font-weight: 600; text-decoration: none;">View All &rsaquo;</a>
         </div>
-        <div class="stat-card-pro">
-          <div class="icon-box" style="color: #f8c14a;">
-            ${icons.star}
-          </div>
-          <div>
-            <h4>4.9/5</h4>
-            <p>User Rating</p>
-          </div>
+        <div class="home-events-scroll" style="display: flex; overflow-x: auto; gap: 16px; padding-bottom: 16px; -ms-overflow-style: none; scrollbar-width: none;">
+          ${upcomings.slice(0, 6).map(e => `
+            <div style="flex: 0 0 90%; max-width: 400px;">
+              ${mobileHomeEventCard(e)}
+            </div>
+          `).join('')}
         </div>
-      </div>
-    </main>
+        <style>
+          .home-events-scroll::-webkit-scrollbar { display: none; }
+        </style>
+      </section>
+    </div>
   `;
 }
 
+function mobileHomeEventCard(event) {
+  if (!event) return '';
+  const title = event.title || 'UFC Event';
+  const venue = event.venue || 'TBA';
+  const d = new Date(event.eventDate || new Date());
+  const dateStr = isNaN(d.getTime()) ? "TBA" : d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+  const timeStr = isNaN(d.getTime()) ? "" : d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  
+  // Try to find a badge text from title
+  const badgeMatch = title.match(/(UFC \d+|Fight Night)/i);
+  const badgeText = badgeMatch ? badgeMatch[0] : 'UFC';
+  
+  return `
+    <div class="mobile-ue-card">
+      <div class="ue-image-container">
+        <span class="ue-badge ue-badge-red">PPV</span>
+        <span class="ue-badge ue-badge-yellow">${badgeText}</span>
+        <img src="${eventImage(event)}" alt="${title}" class="ue-poster" />
+      </div>
+      <div class="ue-details">
+        <h4 class="ue-title">${title}</h4>
+        <div class="ue-meta">
+          <div class="ue-meta-item">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span>${dateStr} • ${timeStr}</span>
+          </div>
+          <div class="ue-meta-item">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <span>${venue}</span>
+          </div>
+        </div>
+        <button class="buy-ppv-btn-mobile" onclick="setRoute('events')">Buy PPV</button>
+      </div>
+    </div>
+  `;
+}
 function schedMiniCard(event, isPast = false) {
   if (!event) return '';
   const title = event.title || 'UFC Event';
   const fightCard = event.fight_card || '';
   const venue = event.venue || 'TBA';
-  const bgImg = event.thumbnail || 'assets/fan-khabib-vs-conor.png';
+  const bgImg = eventImage(event);
   const isLive = event.status === "Live";
   const badgeText = isLive ? "LIVE NOW" : (title.toUpperCase().includes("FIGHT NIGHT") ? "FIGHT NIGHT" : "PPV");
-  const dateStr = new Date(event.eventDate || Date.now()).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  const d = new Date(event.eventDate || Date.now());
+  const dateStr = isNaN(d.getTime()) ? "TBA" : d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) + ' • ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   
   return `
-    <div class="sched-mini-card" style="background-image: url('${bgImg}');" onclick="setRoute('stream','${event.id}')">
+    <div class="sched-mini-card" style="--event-image: url('${bgImg}');" onclick="setRoute('stream','${event.id}')">
       <div class="sched-mini-overlay"></div>
       ${!isPast ? `<div class="sched-mini-badge" style="${isLive ? 'background:#e10600;' : 'background:rgba(225,6,0,0.8);'}">${badgeText}</div>` : ''}
       <div class="sched-mini-content">
@@ -666,6 +826,14 @@ function parseFightCardRows(fightCardStr) {
 }
 
 function renderEvents() {
+  if (eventsLoadInFlight && (!state.events || state.events.length === 0)) {
+    return `
+      <div class="ufc-loader-container">
+        <div class="ufc-loader"></div>
+        <div style="color:#a7a7a7; font-size:1rem; letter-spacing:1px; text-transform:uppercase;">Loading Schedule...</div>
+      </div>
+    `;
+  }
   const upcomings = state.events.filter(e => e.status !== "Ended");
   const pastEvents = state.events.filter(e => e.status === "Ended");
   const featuredEvent = upcomings[0] || pastEvents[0] || state.events[0];
@@ -675,9 +843,9 @@ function renderEvents() {
   let fightCardPanel = '';
 
   if (featuredEvent) {
-    const bgImg = featuredEvent.thumbnail || 'assets/fan-khabib-vs-conor.png';
+    const bgImg = eventImage(featuredEvent);
     const safeDate = featuredEvent.eventDate ? new Date(featuredEvent.eventDate) : new Date();
-    const dateStr = isNaN(safeDate.getTime()) ? 'TBA' : safeDate.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+    const dateStr = isNaN(safeDate.getTime()) ? 'TBA' : safeDate.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'}) + ' • ' + safeDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     const isLive = featuredEvent.status === "Live";
     
     heroContent = `
@@ -707,7 +875,8 @@ function renderEvents() {
       </div>
     `;
 
-    const rows = parseFightCardRows(featuredEvent.fight_card || "Rivera,Kwan,Santos,Cole,Adesina,Volkov");
+    const cardStr = featuredEvent.fight_card || featuredEvent.fightCard;
+    const rows = cardStr ? parseFightCardRows(cardStr) : [];
     
     fightCardPanel = `
       <div class="sched-fight-card-panel">
@@ -735,12 +904,9 @@ function renderEvents() {
       
       <div class="sched-filters">
         <div class="sched-tabs">
-          <button class="sched-tab active">All Events</button>
-          <button class="sched-tab">PPV</button>
-          <button class="sched-tab">Fight Night</button>
-          <button class="sched-tab">Upcoming</button>
-          <button class="sched-tab">This Month</button>
-          <button class="sched-tab">Past Events</button>
+          ${['All Events', 'PPV', 'Fight Night', 'Upcoming', 'This Month', 'Past Events'].map(tab => `
+            <button class="sched-tab ${eventFilter === tab ? 'active' : ''}" onclick="setEventFilter('${tab}')">${tab}</button>
+          `).join('')}
         </div>
         <div class="sched-stats">
           <div class="sched-stat-item">
@@ -774,6 +940,7 @@ function renderEvents() {
         </div>
       </div>
 
+      ${eventFilter === 'All Events' ? `
       ${heroContent}
 
       <div class="sched-layout-split">
@@ -795,13 +962,22 @@ function renderEvents() {
         </div>
       </div>
 
-      <div class="sched-section-header" style="margin-top: 20px;">
-        <h3 class="sched-section-title">PAST EVENTS</h3>
-        <a href="#" class="sched-section-link">View All</a>
-      </div>
-      <div class="sched-mini-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
-        ${pastEvents.slice(0, 4).map(e => schedMiniCard(e, true)).join('')}
-      </div>
+      ` : (() => {
+        let displayEvents = state.events.filter(e => e.status !== "Ended");
+        if (eventFilter === 'PPV') displayEvents = displayEvents.filter(e => e.title.includes('UFC') && /\\d+/.test(e.title));
+        else if (eventFilter === 'Fight Night') displayEvents = displayEvents.filter(e => e.title.toLowerCase().includes('fight night'));
+        else if (eventFilter === 'Upcoming') displayEvents = displayEvents.filter(e => e.status !== "Ended");
+        else if (eventFilter === 'This Month') displayEvents = displayEvents.filter(e => new Date(e.eventDate).getMonth() === new Date().getMonth());
+        else if (eventFilter === 'Past Events') displayEvents = pastEvents;
+        return `
+          <div class="sched-section-header" style="margin-top: 20px;">
+            <h3 class="sched-section-title" style="text-transform: uppercase;">${eventFilter}</h3>
+          </div>
+          <div class="sched-mini-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+            ${displayEvents.length > 0 ? displayEvents.map(e => schedMiniCard(e, e.status === "Ended")).join('') : '<div class="empty">No events found matching this filter.</div>'}
+          </div>
+        `;
+      })()}
 
       <div class="sched-bottom-banner">
         <div class="banner-feature">
@@ -869,44 +1045,56 @@ function renderStream() {
   return `
     <main class="stream-layout">
       <section class="player-frame">
-        <div class="video-stage" ${posterStyle(event)}>
           ${isVideo
-            ? `<video id="videoPlayer" src="${src}" controls playsinline preload="metadata" onerror="handlePlayerError()"></video>`
-            : `<div class="link-player"><p class="eyebrow">External link</p><h2>${event.title}</h2><p>This event uses an external webpage. Open it to watch the authorized broadcast.</p><button class="primary" onclick="openStreamLink('${encodedStreamUrl}')">${icons.play}Open Link</button></div>`}
-          <div class="video-overlay">
-            ${eventBadge(event)}
-            <span class="badge">${event.viewerCount.toLocaleString()} watching</span>
+            ? `<div class="video-stage" ${posterStyle(event)} style="background: transparent;">
+                 <video id="videoPlayer" src="${src}" controls playsinline preload="metadata" onerror="handlePlayerError()"></video>
+                 <div class="video-overlay">
+                   ${eventBadge(event)}
+                   <span class="badge">${event.viewerCount.toLocaleString()} watching</span>
+                 </div>
+               </div>`
+            : `<div class="link-player-pro">
+                 <div class="ppv-badge">PPV</div>
+                 <h2 class="lp-title">${event.title}</h2>
+                 <p class="lp-desc">This event uses an external webpage.<br/>Open it to watch the authorized broadcast.</p>
+                 <button class="lp-btn" onclick="openStreamLink('${encodedStreamUrl}')">
+                   <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                   Open Link
+                 </button>
+               </div>`}
+        <div class="player-controls-pro">
+          <div class="pro-controls-row">
+            <button onclick="shareEvent('${event.id}')">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+              Share
+            </button>
+            <button onclick="toggleFavorite('${event.id}')">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              Favorite
+            </button>
           </div>
         </div>
-        <div class="player-controls">
-          <select class="secondary" aria-label="Stream quality" onchange="toast('Quality set to ' + this.value)">
-            <option>Auto HD</option>
-            <option>1080p</option>
-            <option>720p</option>
-            <option>480p</option>
-          </select>
-          ${isVideo ? `<button class="secondary" onclick="document.getElementById('videoPlayer').requestFullscreen?.()">${icons.max}Full Screen</button>` : ""}
-          <button class="secondary" onclick="shareEvent('${event.id}')">${icons.share}Share</button>
-          <button class="secondary" onclick="toggleFavorite('${event.id}')">Favorite</button>
-        </div>
       </section>
-      <aside class="panel panel-pad">
+      <aside id="stream-panel" class="panel panel-pad">
         <p class="eyebrow">Live stream</p>
         <h2 class="section-title">${event.title}</h2>
         <p class="muted">${event.venue} · ${formatDate(event.eventDate)}</p>
         ${event.description ? `<p style="font-size: 0.95rem; line-height: 1.5; color: #ccc; margin-bottom: 24px;">${event.description}</p>` : ''}
         <h3>Fight Card</h3>
         <div class="fight-card" style="display:flex; flex-direction:column; gap:8px;">
-          ${parseFightCardRows(event.fightCard || event.fight_card || "Rivera,Kwan,Santos,Cole,Adesina,Volkov").map(row => `
-            <div class="fight-row" style="padding:10px; background:#1a1a1a; border-radius:6px; border-left:3px solid #e10600;">
-              <div style="font-size:0.75rem; color:#e10600; font-weight:700; margin-bottom:4px; text-transform:uppercase;">${row.category}</div>
-              <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.9rem;">
-                <span style="flex:1; text-align:right;">${row.f1Name}</span>
-                <span style="color:#888; font-size:0.8rem; font-weight:bold; margin:0 12px;">VS</span>
-                <span style="flex:1; text-align:left;">${row.f2Name}</span>
+          ${(event.fightCard || event.fight_card) ? 
+            parseFightCardRows(event.fightCard || event.fight_card).map(row => `
+              <div class="fight-row" style="padding:10px; background:#1a1a1a; border-radius:6px; border-left:3px solid #e10600;">
+                <div style="font-size:0.75rem; color:#e10600; font-weight:700; margin-bottom:4px; text-transform:uppercase;">${row.category}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.9rem;">
+                  <span style="flex:1; text-align:right;">${row.f1Name}</span>
+                  <span style="color:#888; font-size:0.8rem; font-weight:bold; margin:0 12px;">VS</span>
+                  <span style="flex:1; text-align:left;">${row.f2Name}</span>
+                </div>
               </div>
-            </div>
-          `).join('')}
+            `).join('') 
+            : '<div style="padding:10px; color:#aaa; font-size:0.9rem; text-align:center;">Fight card to be announced.</div>'
+          }
         </div>
       </aside>
     </main>
@@ -914,6 +1102,14 @@ function renderStream() {
 }
 
 function renderLive() {
+  if (eventsLoadInFlight && (!state.events || state.events.length === 0)) {
+    return `
+      <div class="ufc-loader-container">
+        <div class="ufc-loader"></div>
+        <div style="color:#a7a7a7; font-size:1rem; letter-spacing:1px; text-transform:uppercase;">Loading Live Events...</div>
+      </div>
+    `;
+  }
   const lives = state.events.filter(e => e.status === "Live") || [];
   const upcomings = state.events.filter(e => e.status !== "Ended" && e.status !== "Live") || [];
   return `
@@ -958,7 +1154,7 @@ function renderLive() {
 
       <div class="upcoming-grid">
         ${upcomings.slice(0,3).map(event => `
-          <div class="upcoming-card" style="--poster: url('${event.thumbnail || 'assets/fan-khabib-vs-conor.png'}')" onclick="setRoute('stream','${event.id}')">
+          <div class="upcoming-card" style="--poster: url('${eventImage(event)}')" onclick="setRoute('stream','${event.id}')">
             <div class="card-overlay"></div>
             <div class="card-content">
               <div style="display:flex; justify-content:space-between;">
@@ -973,18 +1169,26 @@ function renderLive() {
               
               <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top: auto;">
                 <div style="display:flex; gap:16px; text-align:center;">
-                  <div>
-                    <div style="font-size:1.2rem; font-weight:bold;">03</div>
-                    <div style="font-size:0.7rem; color:#a7a7a7;">DAYS</div>
-                  </div>
-                  <div>
-                    <div style="font-size:1.2rem; font-weight:bold;">14</div>
-                    <div style="font-size:0.7rem; color:#a7a7a7;">HRS</div>
-                  </div>
-                  <div>
-                    <div style="font-size:1.2rem; font-weight:bold;">45</div>
-                    <div style="font-size:0.7rem; color:#a7a7a7;">MIN</div>
-                  </div>
+                  ${(() => {
+                    const diff = Math.max(0, new Date(event.eventDate) - new Date());
+                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                    const m = Math.floor((diff / 1000 / 60) % 60);
+                    return `
+                      <div>
+                        <div style="font-size:1.2rem; font-weight:bold;">${d.toString().padStart(2, '0')}</div>
+                        <div style="font-size:0.7rem; color:#a7a7a7;">DAYS</div>
+                      </div>
+                      <div>
+                        <div style="font-size:1.2rem; font-weight:bold;">${h.toString().padStart(2, '0')}</div>
+                        <div style="font-size:0.7rem; color:#a7a7a7;">HRS</div>
+                      </div>
+                      <div>
+                        <div style="font-size:1.2rem; font-weight:bold;">${m.toString().padStart(2, '0')}</div>
+                        <div style="font-size:0.7rem; color:#a7a7a7;">MIN</div>
+                      </div>
+                    `;
+                  })()}
                 </div>
                 <button class="btn-red">Buy PPV</button>
               </div>
@@ -1078,19 +1282,19 @@ function renderProfile() {
   }
 
   return `
-    <main class="panel panel-pad" style="max-width: 600px; margin: 40px auto;">
+    <main class="panel profile-main-container">
       <p class="eyebrow">Account</p>
-      <h2 class="section-title">${isAdmin() ? "Admin Profile" : "Fan Profile"}</h2>
-      <div class="profile-card" style="display:flex; align-items:center; gap: 24px;">
+      <h2 class="section-title" style="text-align: center;">${isAdmin() ? "Admin Profile" : "Fan Profile"}</h2>
+      <div class="profile-card profile-user-info">
         <img src="${userProfile?.avatar_url || 'assets/fan-khabib-nurmagomedov.png'}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;" alt="Avatar" />
-        <div>
+        <div class="profile-user-details">
           <strong>${userProfile?.display_name || authUser.email}</strong>
-          <span class="muted" style="display:block;">${authUser.email}</span>
+          <span class="muted" style="display:block; margin-top: 4px;">${authUser.email}</span>
           <span class="badge ${isAdmin() ? "live" : ""}" style="margin-top:8px; display:inline-block;">${isAdmin() ? "Admin" : "Fan"}</span>
         </div>
       </div>
       
-      <form class="auth-form-pro" style="margin-top: 32px;" onsubmit="updateProfile(event)">
+      <form class="auth-form-pro profile-edit-form" onsubmit="updateProfile(event)">
         <h3>Edit Profile</h3>
         <div id="profile-message" style="margin-bottom: 16px; font-size: 0.9rem; font-weight: 500;"></div>
         
@@ -1103,10 +1307,10 @@ function renderProfile() {
           <label for="display-name">Display Name</label>
           <input name="displayName" type="text" id="display-name" value="${userProfile?.display_name || ""}" required />
         </div>
-        <button class="btn-red" type="submit" style="width: auto;">Save Changes</button>
+        <button class="btn-red profile-save-btn" type="submit">Save Changes</button>
       </form>
 
-      <div class="row" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #333;">
+      <div class="profile-action-buttons">
         ${isAdmin() ? `<button class="primary" onclick="setRoute('admin')">${icons.shield}Admin Panel</button>` : `<button class="secondary" onclick="setRoute('live')">${icons.play}Watch Stream</button>`}
         <button class="secondary" onclick="logoutUser()">${icons.logout}Sign Out</button>
       </div>
@@ -1449,11 +1653,16 @@ function renderAdmin() {
   return `
     <div class="admin-layout-pro">
       <nav class="admin-sidebar">
-        <div class="admin-brand">
-          <img src="${LOGO_IMAGE}" style="width:32px; height:20px; object-fit:contain;" />
-          <h1>UFC <span>ADMIN</span></h1>
+        <div class="admin-brand" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <img src="${LOGO_IMAGE}" style="width:32px; height:20px; object-fit:contain;" />
+            <h1>UFC <span>ADMIN</span></h1>
+          </div>
+          <button class="admin-mobile-menu-btn" onclick="toggleAdminSidebar()" title="Admin Menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
         </div>
-        <div class="sidebar-links">
+        <div id="admin-sidebar-links" class="sidebar-links">
           <a class="sidebar-link ${adminTab === 'dashboard' ? 'active' : ''}" onclick="setAdminTab('dashboard')">${icons.home} Dashboard</a>
           <a class="sidebar-link ${adminTab === 'users' ? 'active' : ''}" onclick="setAdminTab('users')">${icons.user} Users</a>
           <a class="sidebar-link ${adminTab === 'subscriptions' ? 'active' : ''}" onclick="setAdminTab('subscriptions')">${icons.calendar} Subscriptions</a>
@@ -1545,6 +1754,218 @@ function renderFans() {
   `;
 }
 
+function fighterDisplayName(fighter) {
+  return fighter?.Name || [fighter?.FirstName, fighter?.LastName].filter(Boolean).join(" ") || "Unknown Fighter";
+}
+
+function fighterValue(value, fallback = "N/A") {
+  if (value === null || value === undefined || value === "") return fallback;
+  return value;
+}
+
+function fighterRecord(fighter) {
+  if (fighter?.CitoRecord) return fighter.CitoRecord;
+  const wins = fighter?.Wins ?? fighter?.Win;
+  const losses = fighter?.Losses ?? fighter?.Loss;
+  const draws = fighter?.Draws ?? fighter?.Draw;
+  const noContests = fighter?.NoContests ?? fighter?.NoContest;
+  if ([wins, losses, draws, noContests].every((value) => value === undefined || value === null)) return "N/A";
+  return `${wins ?? 0}-${losses ?? 0}-${draws ?? 0}${noContests ? ` (${noContests} NC)` : ""}`;
+}
+
+function fighterMetric(label, value) {
+  return `
+    <div class="fighter-metric">
+      <span>${label}</span>
+      <strong>${fighterValue(value)}</strong>
+    </div>
+  `;
+}
+
+function fighterImage(fighter) {
+  return fighter?.ApiImageUrl
+    || fighter?.PhotoUrl
+    || fighter?.PhotoURL
+    || fighter?.HeadshotUrl
+    || fighter?.HeadshotURL
+    || fighter?.ImageUrl
+    || fighter?.ImageURL
+    || fighter?.PictureUrl
+    || fighter?.PictureURL
+    || fighter?.UsaTodayHeadshotUrl
+    || fighter?.UsaTodayHeadshotURL
+    || "";
+}
+
+function fighterInitials(fighter) {
+  const name = fighterDisplayName(fighter);
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase() || "MMA";
+}
+
+function fighterSearchText(fighter) {
+  return [
+    fighterDisplayName(fighter),
+    fighter.CitoSlug,
+    fighter.Country,
+    fighter.WeightClass,
+    fighter.Division,
+    fighter.Status,
+    fighter.Nickname,
+    fighter.Stance,
+    fighter.Ranking
+  ].filter(Boolean).join(" ").toLowerCase();
+}
+
+function normalizeFighterName(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/['".]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function fighterCard(fighter) {
+  const name = fighterDisplayName(fighter);
+  const country = fighterValue(fighter.Country, "Global");
+  const weightClass = fighterValue(fighter.WeightClass || fighter.Division, "MMA");
+  const nickname = fighterValue(fighter.Nickname, "");
+  const image = fighterImage(fighter);
+  const imageSource = fighter.ImageSource || (fighter.CitoImageUrl ? "Cito UFC" : "SportsData.io");
+  return `
+    <article class="mma-fighter-card" data-fighter-card data-search="${fighterSearchText(fighter).replace(/"/g, "&quot;")}">
+      <div class="mma-fighter-media ${image ? "has-api-photo" : "no-photo"}">
+        ${image
+          ? `<img src="${image}" alt="${name}" loading="lazy" onerror="this.closest('.mma-fighter-media').classList.add('no-photo'); this.remove();" />`
+          : ""}
+        <span class="mma-fighter-initials">${fighterInitials(fighter)}</span>
+        <span class="mma-photo-source">${image ? `${imageSource} photo` : "No API photo"}</span>
+      </div>
+      <div class="mma-fighter-topline">
+        <div>
+          <p class="mma-fighter-kicker">${weightClass}</p>
+          <h3>${name}</h3>
+          ${nickname ? `<p class="mma-fighter-nickname">"${nickname}"</p>` : ""}
+        </div>
+        <span class="mma-fighter-country">${country}</span>
+      </div>
+      <div class="mma-fighter-record">${fighterRecord(fighter)}</div>
+      <div class="mma-fighter-metrics">
+        ${fighterMetric("Height", fighter.Height)}
+        ${fighterMetric("Weight", fighter.Weight)}
+        ${fighterMetric("Reach", fighter.Reach)}
+        ${fighterMetric("Stance", fighter.Stance)}
+        ${fighterMetric("Age", fighter.Age)}
+        ${fighterMetric("Rank", fighter.Ranking)}
+      </div>
+      <button class="btn-red view-profile-btn" style="width:100%; padding:10px; margin-top:16px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="openFighterProfile('${normalizeFighterName(fighterDisplayName(fighter)).replace(/\s+/g, '-')}'); event.stopPropagation();">
+        View Full Profile
+      </button>
+    </article>
+  `;
+}
+
+async function loadMmaFighters(force = false) {
+  if (mmaFightersState.loading) return;
+  if (!force && mmaFightersState.fighters.length) return;
+
+  mmaFightersState = { ...mmaFightersState, loading: true, error: "" };
+  render();
+
+  try {
+    const response = await fetch(`/api/mma/fighters?t=${Date.now()}`, { cache: "no-store" });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || `Fighter API failed with status ${response.status}`);
+    }
+    mmaFightersState = {
+      ...mmaFightersState,
+      fighters: Array.isArray(payload.fighters) ? payload.fighters : [],
+      loading: false,
+      error: "",
+      fetchedAt: payload.fetchedAt || new Date().toISOString()
+    };
+  } catch (error) {
+    mmaFightersState = {
+      ...mmaFightersState,
+      loading: false,
+      error: error.message || "Could not load MMA fighters."
+    };
+  }
+
+  if (route === "fighters") render();
+}
+
+function renderMmaFighterResults(value = mmaFightersState.query) {
+  const grid = document.getElementById("mma-fighters-grid");
+  const empty = document.getElementById("mma-fighters-empty");
+  if (!grid) return;
+  const normalized = value.trim().toLowerCase();
+  const fighters = mmaFightersState.fighters
+    .filter((fighter) => !normalized || fighterSearchText(fighter).includes(normalized))
+    .slice(0, 240);
+  grid.innerHTML = fighters.map(fighterCard).join("");
+  if (empty) empty.hidden = fighters.length > 0;
+}
+
+function handleMmaFighterSearch(input) {
+  const value = input.value;
+  mmaFightersState.query = value;
+  clearTimeout(mmaFighterSearchTimer);
+  mmaFighterSearchTimer = setTimeout(() => renderMmaFighterResults(value), 90);
+}
+
+function renderFighters() {
+  const fighters = mmaFightersState.fighters.slice(0, 240);
+
+  setTimeout(() => loadMmaFighters(), 0);
+
+  return `
+    <main class="mma-fighters-page">
+      <section class="mma-fighters-header">
+        <div>
+          <h2 class="section-title">Fighters</h2>
+        </div>
+        <button class="secondary mma-refresh-btn" onclick="loadMmaFighters(true)">Refresh Data</button>
+      </section>
+
+      <section class="mma-fighters-toolbar">
+        <label class="mma-search-box">
+          ${icons.search}
+          <input id="mma-fighter-search" type="search" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Search fighter, country, or division" value="${mmaFightersState.query}" oninput="handleMmaFighterSearch(this)" />
+        </label>
+        <div class="mma-data-status">
+          ${mmaFightersState.loading ? "Loading latest data..." : mmaFightersState.fetchedAt ? `Updated ${new Date(mmaFightersState.fetchedAt).toLocaleString()}` : "Waiting for live data"}
+        </div>
+      </section>
+
+      ${mmaFightersState.error ? `
+        <div class="mma-error-panel">
+          <strong>Could not load fighter data.</strong>
+          <span>${mmaFightersState.error}</span>
+          <button class="secondary" onclick="loadMmaFighters(true)">Try Again</button>
+        </div>
+      ` : ""}
+
+      ${mmaFightersState.loading && !mmaFightersState.fighters.length ? `
+        <div class="mma-loading-grid">
+          ${Array.from({ length: 8 }).map(() => '<div class="mma-skeleton-card"></div>').join("")}
+        </div>
+      ` : `
+        <section id="mma-fighters-grid" class="mma-fighters-grid">
+          ${fighters.map(fighterCard).join("")}
+        </section>
+        <div id="mma-fighters-empty" class="empty" ${fighters.length ? "hidden" : ""}>No fighters matched your search.</div>
+      `}
+    </main>
+  `;
+}
+
 async function loginUser(event) {
   event.preventDefault();
   const msgEl = document.getElementById("auth-message");
@@ -1587,7 +2008,7 @@ async function signUpUser(event) {
   }
   
   const data = Object.fromEntries(new FormData(event.target));
-  const { error } = await client.auth.signUp({
+  const { data: signUpData, error } = await client.auth.signUp({
     email: String(data.email).trim(),
     password: String(data.password),
     options: {
@@ -1599,11 +2020,22 @@ async function signUpUser(event) {
   
   if (error) {
     const text = error.message || error.error_description || JSON.stringify(error);
-    if (msgEl) msgEl.textContent = text === "{}" ? "Sign up failed." : text;
-  } else {
     if (msgEl) {
-      msgEl.style.color = "#00ff00";
-      msgEl.textContent = "Account created. You can now sign in.";
+      msgEl.style.color = "#e10600";
+      msgEl.textContent = text === "{}" ? "Sign up failed." : text;
+    }
+  } else {
+    if (signUpData?.session) {
+      await applySessionUser(signUpData.user);
+      if (msgEl) {
+        msgEl.style.color = "#00ff00";
+        msgEl.textContent = "Account created and signed in successfully!";
+      }
+    } else {
+      if (msgEl) {
+        msgEl.style.color = "#00ff00";
+        msgEl.textContent = "Account created. Please sign in.";
+      }
     }
   }
 }
@@ -1808,7 +2240,7 @@ async function saveEvent(submitEvent) {
   const previous = state.events.find((event) => event.id === data.id);
   try {
     let streamUrl = String(data.streamUrl || "").trim();
-    let thumbnailUrl = String(data.thumbnail || "").trim();
+    let thumbnailUrl = String(data.thumbnail || previous?.thumbnail || "").trim();
     
     const thumbnailFile = submitEvent.target.elements.thumbnailFile?.files?.[0];
     if (thumbnailFile) {
@@ -2382,33 +2814,179 @@ function renderMovement(mov) {
   return mov;
 }
 
+function liveRankScore(fighter) {
+  return ((fighter.TitleWins || 0) * 1000)
+    + ((fighter.Wins || 0) * 25)
+    + ((fighter.TechnicalKnockouts || 0) * 8)
+    + ((fighter.Submissions || 0) * 8)
+    - ((fighter.Losses || 0) * 18);
+}
+
+function liveRankingsData(fallbackData) {
+  if (!mmaFightersState.fighters.length) return fallbackData;
+  const pool = mmaFightersState.fighters
+    .filter((fighter) => {
+      if (activeWeightClass === "Pound-for-Pound") return !(fighter.WeightClass || "").toLowerCase().includes("women");
+      if (activeWeightClass === "Women's Pound-for-Pound") return (fighter.WeightClass || "").toLowerCase().includes("women");
+      return (fighter.WeightClass || "").toLowerCase() === activeWeightClass.toLowerCase();
+    })
+    .sort((a, b) => liveRankScore(b) - liveRankScore(a))
+    .slice(0, 15);
+
+  if (!pool.length) return fallbackData;
+
+  const championFighter = pool[0];
+  return {
+    champion: {
+      name: fighterDisplayName(championFighter),
+      division: championFighter.WeightClass || fallbackData.champion.division,
+      record: fighterRecord(championFighter),
+      koWins: championFighter.TechnicalKnockouts || 0,
+      lastFightDate: mmaFightersState.fetchedAt ? new Date(mmaFightersState.fetchedAt).toLocaleDateString() : "Live API",
+      nextFightOpponent: "TBD",
+      nextFightEvent: "SportsData.io Live Feed",
+      nextFightDate: "TBD",
+      country: championFighter.Country || "Global",
+      subWins: championFighter.Submissions || 0,
+      decWins: Math.max(0, (championFighter.Wins || 0) - (championFighter.TechnicalKnockouts || 0) - (championFighter.Submissions || 0)),
+      isChamp: true
+    },
+    fighters: pool.slice(1).map((fighter, index) => ({
+      rank: index + 1,
+      name: fighterDisplayName(fighter),
+      record: fighterRecord(fighter),
+      lastFight: `SportsData.io\n${fighter.WeightClass || "MMA"}`,
+      movement: "-"
+    }))
+  };
+}
+
+async function loadMmaNews(force = false) {
+  if (mmaNewsState.loading) return;
+  if (!force && (mmaNewsState.news.length || mmaNewsState.error)) return;
+
+  mmaNewsState = { ...mmaNewsState, loading: true, error: "" };
+  if (route === "rankings") render();
+
+  try {
+    const response = await fetch(`/api/mma/news?t=${Date.now()}`, { cache: "no-store" });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || `MMA news API failed with status ${response.status}`);
+    }
+    mmaNewsState = {
+      news: Array.isArray(payload.news) ? payload.news : [],
+      loading: false,
+      error: "",
+      fetchedAt: payload.fetchedAt || new Date().toISOString()
+    };
+  } catch (error) {
+    mmaNewsState = {
+      ...mmaNewsState,
+      loading: false,
+      error: error.message || "Could not load MMA news."
+    };
+  }
+
+  if (route === "rankings") render();
+}
+
+function renderMmaNewsItems() {
+  if (mmaNewsState.loading) {
+    return '<div class="rank-news-item"><h4>Loading live MMA news...</h4><div class="date">SportsData.io</div></div>';
+  }
+  const liveUpdates = liveFighterUpdateItems();
+  if (!mmaNewsState.news.length) return liveUpdates.slice(0, 3).map(rankNewsCard).join("");
+  return mmaNewsState.news.slice(0, 3).map((item) => `
+    <div class="rank-news-item">
+      <h4>${item.Title || item.Headline || "MMA News Update"}</h4>
+      <div class="date">${item.Updated || item.TimeAgo || item.Published || item.Created || "SportsData.io"}</div>
+    </div>
+  `).join("");
+}
+
+function liveFighterUpdateItems() {
+  if (!mmaFightersState.fighters.length) {
+    return [{
+      title: "Loading live fighter updates",
+      detail: "SportsData.io fighter feed is being requested."
+    }];
+  }
+
+  const sorted = [...mmaFightersState.fighters].sort((a, b) => liveRankScore(b) - liveRankScore(a));
+  const titleLeader = sorted.find((fighter) => fighter.TitleWins > 0) || sorted[0];
+  const finisher = [...mmaFightersState.fighters].sort((a, b) =>
+    ((b.TechnicalKnockouts || 0) + (b.Submissions || 0)) - ((a.TechnicalKnockouts || 0) + (a.Submissions || 0))
+  )[0];
+  const newestTimestamp = mmaFightersState.fetchedAt ? new Date(mmaFightersState.fetchedAt).toLocaleString() : "Live feed";
+
+  return [
+    {
+      title: `${fighterDisplayName(sorted[0])} leads live data ranking`,
+      detail: `${fighterRecord(sorted[0])} · ${sorted[0].WeightClass || "MMA"} · Updated ${newestTimestamp}`
+    },
+    {
+      title: `${fighterDisplayName(titleLeader)} stands out in title-fight data`,
+      detail: `${titleLeader.TitleWins || 0} title wins tracked by SportsData.io`
+    },
+    {
+      title: `${fighterDisplayName(finisher)} tops finish metrics`,
+      detail: `${(finisher.TechnicalKnockouts || 0) + (finisher.Submissions || 0)} combined TKO/submission wins`
+    }
+  ];
+}
+
+function rankNewsCard(item) {
+  return `
+    <div class="rank-news-item">
+      <h4>${item.title}</h4>
+      <div class="date">${item.detail}</div>
+    </div>
+  `;
+}
+
 function renderRankings() {
-  const currentData = MOCK_RANKINGS[activeWeightClass] || MOCK_RANKINGS["Pound-for-Pound"];
+  setTimeout(() => {
+    loadMmaFighters();
+    loadMmaNews();
+  }, 0);
+  const fallbackData = MOCK_RANKINGS[activeWeightClass] || MOCK_RANKINGS["Pound-for-Pound"];
+  const currentData = liveRankingsData(fallbackData);
   const champ = currentData.champion;
+  const updatedText = mmaFightersState.fetchedAt
+    ? new Date(mmaFightersState.fetchedAt).toLocaleString()
+    : "Loading live feed";
   
   return `
+    <div class="rankings-rtl-scroll">
     <main class="rankings-layout-pro">
       
       <!-- Left Sidebar -->
       <aside>
-        <div class="rank-sidebar-menu">
-          <div class="rank-sidebar-header">Weight Classes</div>
-          ${ALL_WEIGHT_CLASSES.map(cat => `
-            <button class="rank-sidebar-btn ${cat === activeWeightClass ? 'active' : ''}" onclick="setWeightClass(&quot;${cat}&quot;)">
-              <div class="rank-sidebar-icon">${cat === "Pound-for-Pound" ? "🏆" : cat.split(' ').map(w => w[0]).join('').substring(0,3)}</div>
-              ${cat}
-            </button>
-          `).join('')}
-        </div>
-        
-        <div class="rank-right-box" style="margin-top:24px;">
-          <div class="rank-right-header" style="margin-bottom:8px;">
-            <h3 style="color:#a7a7a7; font-size: 0.8rem;">RANKINGS INFO</h3>
+        <button class="mobile-accordion-toggle" onclick="toggleRankingsAccordion('left')">
+          <span>Filter by Weight Class</span>
+          <svg style="transform: rotate(${rankAccordionLeft ? '180deg' : '0deg'}); transition: transform 0.3s;" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="mobile-accordion-content ${rankAccordionLeft ? 'open' : ''}">
+          <div class="rank-sidebar-menu">
+            <div class="rank-sidebar-header">Weight Classes</div>
+            ${ALL_WEIGHT_CLASSES.map(cat => `
+              <button class="rank-sidebar-btn ${cat === activeWeightClass ? 'active' : ''}" onclick="setWeightClass(&quot;${cat}&quot;); toggleRankingsAccordion('left');">
+                <div class="rank-sidebar-icon">${cat === "Pound-for-Pound" ? "🏆" : cat.split(' ').map(w => w[0]).join('').substring(0,3)}</div>
+                ${cat}
+              </button>
+            `).join('')}
           </div>
-          <p style="font-size: 0.85rem; color: #ccc; line-height: 1.5; margin-bottom: 16px;">
-            Rankings are updated every Tuesday following all major UFC events.
-          </p>
-          <a href="#" style="color: #e10600; text-decoration: none; font-size: 0.85rem; font-weight: bold;">Learn More →</a>
+          
+          <div class="rank-right-box" style="margin-top:24px;">
+            <div class="rank-right-header" style="margin-bottom:8px;">
+              <h3 style="color:#a7a7a7; font-size: 0.8rem;">RANKINGS INFO</h3>
+            </div>
+            <p style="font-size: 0.85rem; color: #ccc; line-height: 1.5; margin-bottom: 16px;">
+              Rankings are updated every Tuesday following all major UFC events.
+            </p>
+            <a href="#" style="color: #e10600; text-decoration: none; font-size: 0.85rem; font-weight: bold;">Learn More →</a>
+          </div>
         </div>
       </aside>
 
@@ -2420,12 +2998,12 @@ function renderRankings() {
             <p>The best fighters in the world, ranked by the UFC.</p>
           </div>
           <div class="rank-meta-info">
-            <div style="margin-bottom: 8px;">Last Updated: June 20, 2026</div>
+            <div style="margin-bottom: 8px;">Last Updated: ${updatedText}</div>
             <button style="background:none; border:1px solid rgba(255,255,255,0.2); color:#ccc; padding:6px 12px; border-radius:6px; cursor:pointer;" onclick="openRankingsModal('how')">How Rankings Work ⓘ</button>
           </div>
         </div>
 
-        <div class="rank-tabs-row">
+        <div class="rank-tabs-row custom-horizontal-scroll">
           ${ALL_WEIGHT_CLASSES.slice(0,8).map(cat => `
             <button class="rank-tab ${cat === activeWeightClass ? 'active' : ''}" onclick="setWeightClass(&quot;${cat}&quot;)">
               ${cat === "Pound-for-Pound" ? "P4P" : cat.split(' ').map(w => w[0]).join('').substring(0,3)}
@@ -2461,28 +3039,30 @@ function renderRankings() {
           </div>
         </div>
 
-        <table class="rankings-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Fighter</th>
-              <th>Record</th>
-              <th>Last Fight</th>
-              <th>Movement</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${currentData.fighters.map(f => `
+        <div class="custom-horizontal-scroll">
+          <table class="rankings-table">
+            <thead>
               <tr>
-                <td class="rt-rank">${f.rank}</td>
-                <td class="rt-fighter">${f.name}</td>
-                <td class="rt-record">${f.record}</td>
-                <td class="rt-lastfight">${f.lastFight}</td>
-                <td>${renderMovement(f.movement)}</td>
+                <th>#</th>
+                <th>Fighter</th>
+                <th>Record</th>
+                <th>Last Fight</th>
+                <th>Movement</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${currentData.fighters.map(f => `
+                <tr>
+                  <td class="rt-rank">${f.rank}</td>
+                  <td class="rt-fighter">${f.name}</td>
+                  <td class="rt-record">${f.record}</td>
+                  <td class="rt-lastfight">${f.lastFight}</td>
+                  <td>${renderMovement(f.movement)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
 
         <button class="rank-view-full-btn">View Full ${activeWeightClass} Rankings →</button>
         
@@ -2519,58 +3099,54 @@ function renderRankings() {
       </section>
 
       <!-- Right Sidebar -->
-      <aside>
-        <div class="rank-right-box">
-          <div class="rank-right-header">
-            <h3>About The Champion</h3>
-          </div>
-          <h2 style="font-size: 1.5rem; text-transform: uppercase; margin: 0 0 8px 0;">${champ.name}</h2>
-          <div style="display:flex; gap:8px; margin-bottom: 16px;">
-            <span style="background:#d4af37; color:#000; font-weight:bold; font-size:0.7rem; padding:4px 8px; border-radius:4px;">CHAMPION</span>
-            <span style="color:#a7a7a7; font-size:0.8rem; display:flex; align-items:center;">${activeWeightClass}</span>
-          </div>
-          <div style="font-size:0.85rem; color:#ccc; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 16px;">
-            ${champ.record} &nbsp;|&nbsp; <span style="color:#e10600; font-weight:bold;">${champ.country}</span>
-          </div>
-          <div class="champ-sidebar-stats">
-            <div class="stat">
-              <div class="val">${champ.koWins}</div>
-              <div class="lbl">KO/TKO</div>
+      <aside class="rank-sidebar-right">
+        <button class="mobile-accordion-toggle" onclick="toggleRankingsAccordion('right')">
+          <span>Champion & News</span>
+          <svg style="transform: rotate(${rankAccordionRight ? '180deg' : '0deg'}); transition: transform 0.3s;" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="mobile-accordion-content ${rankAccordionRight ? 'open' : ''}">
+          <div class="rank-right-box">
+            <div class="rank-right-header">
+              <h3>About The Champion</h3>
             </div>
-            <div class="stat" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 16px;">
-              <div class="val">${champ.subWins}</div>
-              <div class="lbl">Submissions</div>
+            <h2 style="font-size: 1.5rem; text-transform: uppercase; margin: 0 0 8px 0;">${champ.name}</h2>
+            <div style="display:flex; gap:8px; margin-bottom: 16px;">
+              <span style="background:#d4af37; color:#000; font-weight:bold; font-size:0.7rem; padding:4px 8px; border-radius:4px;">CHAMPION</span>
+              <span style="color:#a7a7a7; font-size:0.8rem; display:flex; align-items:center;">${activeWeightClass}</span>
             </div>
-            <div class="stat" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 16px;">
-              <div class="val">${champ.decWins}</div>
-              <div class="lbl">Decisions</div>
+            <div style="font-size:0.85rem; color:#ccc; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 16px;">
+              ${champ.record} &nbsp;|&nbsp; <span style="color:#e10600; font-weight:bold;">${champ.country}</span>
             </div>
+            <div class="champ-sidebar-stats">
+              <div class="stat">
+                <div class="val">${champ.koWins}</div>
+                <div class="lbl">KO/TKO</div>
+              </div>
+              <div class="stat" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 16px;">
+                <div class="val">${champ.subWins}</div>
+                <div class="lbl">Submissions</div>
+              </div>
+              <div class="stat" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 16px;">
+                <div class="val">${champ.decWins}</div>
+                <div class="lbl">Decisions</div>
+              </div>
+            </div>
+            <button class="rank-view-full-btn" style="background:transparent; font-size: 0.9rem; margin-top: 24px;" onclick="openRankingsModal('profile', '${encodeURIComponent(JSON.stringify(champ))}')">View Fighter Profile →</button>
           </div>
-          <button class="rank-view-full-btn" style="background:transparent; font-size: 0.9rem; margin-top: 24px;" onclick="openRankingsModal('profile', '${encodeURIComponent(JSON.stringify(champ))}')">View Fighter Profile →</button>
-        </div>
 
-        <div class="rank-right-box">
-          <div class="rank-right-header">
-            <h3>Rankings News</h3>
-            <a href="#">View All</a>
+          <div class="rank-right-box">
+            <div class="rank-right-header">
+              <h3>Rankings News</h3>
+              <a href="#">View All</a>
+            </div>
+            ${renderMmaNewsItems()}
+            <button class="rank-view-full-btn" style="background:transparent; font-size: 0.9rem;" onclick="openRankingsModal('news')">View All News →</button>
           </div>
-          <div class="rank-news-item">
-            <h4>UFC Adopts New Meta UFC Rankings System</h4>
-            <div class="date">June 20, 2026</div>
-          </div>
-          <div class="rank-news-item">
-            <h4>Algorithm Replaces Media Voting Panel</h4>
-            <div class="date">June 20, 2026</div>
-          </div>
-          <div class="rank-news-item">
-            <h4>Islam Makhachev Tops Data-Driven List</h4>
-            <div class="date">June 20, 2026</div>
-          </div>
-          <button class="rank-view-full-btn" style="background:transparent; font-size: 0.9rem;" onclick="openRankingsModal('news')">View All News →</button>
         </div>
       </aside>
 
     </main>
+    </div>
   `;
 }
 
@@ -2579,14 +3155,126 @@ function currentView() {
   if (route === "events") return renderEvents();
   if (route === "live") return renderLive();
   if (route === "fans") return renderFans();
+  if (route === "fighters") return renderFighters();
   if (route === "rankings") return renderRankings();
   if (route === "profile") return renderProfile();
   if (route === "admin") return renderAdmin();
   return renderHome();
 }
 
+
+async function openFighterProfile(slug) {
+  profileModalState = { open: true, loading: true, data: null, error: null };
+  render();
+  try {
+    const response = await fetch('/api/mma/fighters/' + slug);
+    if (!response.ok) throw new Error("Fighter not found");
+    const payload = await response.json();
+    if (payload.error) throw new Error(payload.error);
+    profileModalState.data = payload.data || payload;
+    profileModalState.loading = false;
+  } catch (err) {
+    profileModalState.error = err.message;
+    profileModalState.loading = false;
+  }
+  render();
+}
+
+function closeFighterProfile() {
+  profileModalState.open = false;
+  render();
+}
+
+function renderFighterProfileModal() {
+  if (!profileModalState.open) return '';
+  
+  if (profileModalState.loading) {
+    return `
+      <div class="fighter-profile-modal-overlay active" onclick="closeFighterProfile()">
+        <div class="fighter-profile-modal" style="background:transparent; border:none; box-shadow:none;" onclick="event.stopPropagation()">
+          <div class="ufc-loader"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (profileModalState.error) {
+    return `
+      <div class="fighter-profile-modal-overlay active" onclick="closeFighterProfile()">
+        <div class="fighter-profile-modal" style="padding:40px; text-align:center; color:#fff;" onclick="event.stopPropagation()">
+          <button class="fighter-profile-close" onclick="closeFighterProfile()">&times;</button>
+          <h3>Profile Not Available</h3>
+          <p style="color:#e10600;">${profileModalState.error}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  const data = profileModalState.data;
+  if (!data) return '';
+
+  const name = data.name || (data.firstName + ' ' + data.lastName);
+  const nickname = data.nickname ? `"${data.nickname}"` : '';
+  const image = data.bodyImageUrl || data.headshotUrl || data.imageUrl || '';
+  const record = data.recordText || data.record?.text || `${data.recordWins}-${data.recordLosses}-${data.recordDraws}`;
+  
+  return `
+    <div class="fighter-profile-modal-overlay active" onclick="closeFighterProfile()">
+      <div class="fighter-profile-modal" onclick="event.stopPropagation()">
+        <button class="fighter-profile-close" onclick="closeFighterProfile()">&times;</button>
+        <div class="fighter-profile-content">
+          <div class="fighter-profile-image-col">
+            ${image ? `<img src="${image}" alt="${name}" />` : `<div style="color:#aaa;">No Image Available</div>`}
+          </div>
+          <div class="fighter-profile-info-col">
+            <h2>${name}</h2>
+            ${nickname ? `<div class="nickname">${nickname}</div>` : ''}
+            
+            <div class="fighter-stats-grid">
+              <div class="fighter-stat-box">
+                <div class="fighter-stat-label">Record</div>
+                <div class="fighter-stat-val">${record}</div>
+              </div>
+              <div class="fighter-stat-box">
+                <div class="fighter-stat-label">Division</div>
+                <div class="fighter-stat-val">${data.division || '-'}</div>
+              </div>
+              <div class="fighter-stat-box">
+                <div class="fighter-stat-label">Height</div>
+                <div class="fighter-stat-val">${data.heightInches ? Math.floor(data.heightInches/12) + "'" + (data.heightInches%12) + "\"" : '-'}</div>
+              </div>
+              <div class="fighter-stat-box">
+                <div class="fighter-stat-label">Weight</div>
+                <div class="fighter-stat-val">${data.weightLbs ? data.weightLbs + ' lbs' : '-'}</div>
+              </div>
+              <div class="fighter-stat-box">
+                <div class="fighter-stat-label">Reach</div>
+                <div class="fighter-stat-val">${data.reachInches ? data.reachInches + '\"' : '-'}</div>
+              </div>
+              <div class="fighter-stat-box">
+                <div class="fighter-stat-label">Stance</div>
+                <div class="fighter-stat-val">${data.stance || '-'}</div>
+              </div>
+            </div>
+
+            <div class="fighter-bio">
+              ${data.raw?.jsonLd?.[0]?.mainEntity?.description || 'No biography available.'}
+            </div>
+
+            <div class="fighter-socials">
+              ${data.socialLinks?.['twitter.com'] ? `<a href="${data.socialLinks['twitter.com']}" target="_blank">Twitter</a>` : ''}
+              ${data.socialLinks?.['instagram.com'] ? `<a href="${data.socialLinks['instagram.com']}" target="_blank">Instagram</a>` : ''}
+              ${data.socialLinks?.['facebook.com'] ? `<a href="${data.socialLinks['facebook.com']}" target="_blank">Facebook</a>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function render() {
-  if (!authUser && route !== "profile") {
+  if (!authUser && route !== "profile" && route !== "fighters") {
     route = "profile";
   }
   
@@ -2595,11 +3283,21 @@ function render() {
       ${topbar()}
       ${currentView()}
       ${bottomNav()}
+      ${renderFighterProfileModal()}
     </div>
   `;
 }
 
 window.setRoute = setRoute;
+window.setEventFilter = (filter) => {
+  eventFilter = filter;
+  render();
+};
+window.toggleRankingsAccordion = (side) => {
+  if (side === 'left') rankAccordionLeft = !rankAccordionLeft;
+  if (side === 'right') rankAccordionRight = !rankAccordionRight;
+  render();
+};
 window.setWeightClass = setWeightClass;
 window.loginUser = loginUser;
 window.signUpUser = signUpUser;
@@ -2620,8 +3318,12 @@ window.shareEvent = shareEvent;
 window.openStreamLink = openStreamLink;
 window.handlePlayerError = handlePlayerError;
 window.toggleFanFavorite = toggleFanFavorite;
+window.loadMmaFighters = loadMmaFighters;
+window.handleMmaFighterSearch = handleMmaFighterSearch;
 window.openLightbox = openLightbox;
 window.closeLightbox = closeLightbox;
+window.openFighterProfile = openFighterProfile;
+window.closeFighterProfile = closeFighterProfile;
 
 async function boot() {
   render();

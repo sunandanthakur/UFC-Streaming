@@ -19,6 +19,12 @@
   box-sizing: border-box;
 }
 
+img, video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -26,6 +32,11 @@ body {
     radial-gradient(circle at top left, rgba(225, 6, 0, 0.28), transparent 34rem),
     linear-gradient(180deg, #111111 0%, var(--bg) 30%, #050505 100%);
   color: var(--text);
+}
+
+/* Prevent horizontal overflow on small devices */
+html, body {
+  overflow-x: hidden;
 }
 
 button,
@@ -40,7 +51,8 @@ button {
 }
 
 .app-shell {
-  width: min(100%, 1160px);
+  width: 100%;
+  max-width: 1160px;
   min-height: 100vh;
   margin: 0 auto;
   display: grid;
@@ -69,6 +81,11 @@ button {
 .home-shell::before {
   z-index: 0;
   background: url("../assets/ufc-front-page.jpg") center/cover no-repeat;
+}
+
+/* Hide large fixed background on small screens to avoid layout issues */
+@media (max-width: 880px) {
+  .home-shell::before { display: none; }
 }
 
 .home-shell::after {
@@ -115,16 +132,17 @@ button {
 .mark {
   display: grid;
   place-items: center;
-  width: 78px;
-  height: 48px;
+  width: auto;
+  height: auto;
   background: transparent;
   border: 0;
   box-shadow: none;
 }
 
 .mark img {
-  width: 78px;
-  height: 48px;
+  max-width: 100%;
+  width: clamp(48px, 8vw, 78px);
+  height: auto;
   object-fit: contain;
 }
 
@@ -186,7 +204,7 @@ button {
 .hero {
   position: relative;
   overflow: hidden;
-  min-height: 440px;
+  min-height: 360px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius);
   background: #151515;
@@ -221,10 +239,12 @@ button {
 .poster-visual {
   position: absolute;
   inset: 0;
-  background:
+  background-image:
     linear-gradient(90deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.56) 42%, rgba(0, 0, 0, 0.18) 100%),
     linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.76)),
     var(--poster);
+  background-position: center;
+  background-size: cover;
 }
 
 .hero-visual::after,
@@ -396,7 +416,7 @@ button {
 
 .event-card {
   display: grid;
-  grid-template-columns: 108px minmax(0, 1fr);
+  grid-template-columns: 96px minmax(0, 1fr);
   gap: 12px;
   min-height: 126px;
   padding: 10px;
@@ -417,7 +437,9 @@ button {
   overflow: hidden;
   min-height: 106px;
   border-radius: var(--radius);
-  background: var(--poster);
+  background-image: var(--poster);
+  background-position: center;
+  background-size: cover;
 }
 
 .poster .fighter-shape {
@@ -705,8 +727,17 @@ video {
     grid-template-columns: 1fr;
   }
 
+  #stream-panel {
+    display: block;
+    margin-top: 16px;
+  }
+
+  .stream-mobile-btn {
+    display: inline-flex !important;
+  }
+
   .hero {
-    min-height: 520px;
+    min-height: 360px;
   }
 
   .front-page {
@@ -729,7 +760,7 @@ video {
   }
 
   .hero {
-    min-height: 475px;
+    min-height: 320px;
   }
 
   .front-page {
@@ -1022,4 +1053,195 @@ video {
     gap: 16px;
   }
 }
+
+/* --- Loader & Modal Additions --- */
+
+.ufc-loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  width: 100%;
+  min-height: 300px;
+}
+
+.ufc-loader {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(225, 6, 0, 0.2);
+  border-top-color: #e10600;
+  border-radius: 50%;
+  animation: spin 1s infinite linear;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.fighter-profile-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.fighter-profile-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fighter-profile-modal {
+  background: #111;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  border: 1px solid #333;
+}
+
+.fighter-profile-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0,0,0,0.5);
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.fighter-profile-close:hover {
+  background: #e10600;
+}
+
+.fighter-profile-content {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .fighter-profile-content {
+    flex-direction: row;
+  }
+}
+
+.fighter-profile-image-col {
+  flex: 1;
+  background: linear-gradient(180deg, #222, #000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  min-height: 300px;
+}
+
+.fighter-profile-image-col img {
+  max-width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+}
+
+.fighter-profile-info-col {
+  flex: 1;
+  padding: 40px 30px;
+  background: #111;
+  display: flex;
+  flex-direction: column;
+}
+
+.fighter-profile-info-col h2 {
+  font-size: 2.5rem;
+  margin: 0 0 10px 0;
+  text-transform: uppercase;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.fighter-profile-info-col .nickname {
+  color: #e10600;
+  font-size: 1.2rem;
+  font-style: italic;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.fighter-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.fighter-stat-box {
+  background: #222;
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 3px solid #e10600;
+}
+
+.fighter-stat-label {
+  font-size: 0.75rem;
+  color: #a7a7a7;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.fighter-stat-val {
+  font-size: 1.1rem;
+  color: #fff;
+  font-weight: 700;
+}
+
+.fighter-bio {
+  color: #ccc;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.fighter-socials {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.fighter-socials a {
+  color: #fff;
+  background: #333;
+  padding: 8px 16px;
+  border-radius: 20px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.fighter-socials a:hover {
+  background: #e10600;
+}
+
 
