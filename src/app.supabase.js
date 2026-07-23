@@ -1844,7 +1844,6 @@ function fighterCard(fighter) {
           ? `<img src="${image}" alt="${name}" loading="lazy" onerror="this.closest('.mma-fighter-media').classList.add('no-photo'); this.remove();" />`
           : ""}
         <span class="mma-fighter-initials">${fighterInitials(fighter)}</span>
-        <span class="mma-photo-source">${image ? `${imageSource} photo` : "No API photo"}</span>
       </div>
       <div class="mma-fighter-topline">
         <div>
