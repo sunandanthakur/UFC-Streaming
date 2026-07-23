@@ -3612,16 +3612,16 @@ img {
   gap: 12px !important;
 }
 
-/* Rankings table scroll wrapper */
-.rankings-rtl-scroll {
-  width: 100% !important;
+/* Make sure the custom scroll container actually limits width to force scroll */
+.custom-horizontal-scroll {
+  width: 100%;
+  max-width: 100vw;
   overflow-x: auto !important;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 10px;
 }
 
 .rankings-table {
-  min-width: 600px; /* Ensure table keeps its layout, letting wrapper scroll */
+  min-width: 600px !important; /* Force table to stay wide so it scrolls cleanly */
 }
 
 /* Ensure modals don't overflow the screen */
@@ -3680,5 +3680,57 @@ img {
   
   .brand-logo {
     font-size: 1.2rem !important;
+  }
+}
+
+
+/* =========================================================================
+   RANKINGS TABLE OVERFLOW FIX
+   Forces the table to scroll independently without breaking the page width
+========================================================================= */
+
+/* 1. Stop the outer wrappers from expanding to fit the 600px table */
+.rankings-rtl-scroll {
+  overflow-x: hidden !important; 
+  width: 100% !important;
+  max-width: 100vw !important;
+}
+
+.rankings-layout-pro {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* 2. Force the section containing the table to strictly obey 100% width */
+.rankings-layout-pro > section {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  overflow: hidden !important; /* Essential to prevent grid blowout */
+}
+
+/* 3. Make sure the custom scroll container takes exactly 100% of the section */
+.custom-horizontal-scroll {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 15px !important; /* More space for easy thumb scrolling */
+}
+
+/* 4. Keep the table wide so it creates the horizontal scroll */
+.rankings-table {
+  min-width: 600px !important;
+  width: 100% !important;
+  table-layout: auto !important;
+}
+
+/* 5. Improve table cell readability on mobile */
+@media (max-width: 600px) {
+  .rankings-table th, .rankings-table td {
+    padding: 12px 8px !important;
+    font-size: 0.85rem !important;
+    white-space: nowrap !important;
   }
 }
