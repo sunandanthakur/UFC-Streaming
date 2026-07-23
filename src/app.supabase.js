@@ -42,11 +42,11 @@ window.openRankingsModal = function(type, champStr) {
   } else if (type === 'news') {
     titleEl.textContent = 'Latest Rankings News';
     bodyEl.innerHTML = mmaNewsState.loading
-      ? '<p style="color:#aaa; line-height:1.6;">Loading SportsData.io MMA news...</p>'
+      ? '<p style="color:#aaa; line-height:1.6;">Loading Live Stats MMA news...</p>'
       : (mmaNewsState.news.length ? mmaNewsState.news.slice(0, 10).map((item) => `
           <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
             <h4 style="margin:0 0 8px 0; color:#fff;">${item.Title || item.Headline || "MMA News Update"}</h4>
-            <p style="margin:0; font-size:0.9rem; color:#888;">${item.Updated || item.TimeAgo || item.Published || item.Created || "SportsData.io"} ${item.Content ? `- ${item.Content}` : ""}</p>
+            <p style="margin:0; font-size:0.9rem; color:#888;">${item.Updated || item.TimeAgo || item.Published || item.Created || "Live Stats"} ${item.Content ? `- ${item.Content}` : ""}</p>
           </div>
         `).join("") : liveFighterUpdateItems().map((item) => `
           <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
@@ -307,7 +307,7 @@ function mapEvent(row) {
 
 function mapSportsDataEvent(row) {
   return {
-    id: row.id || `sportsdata-${row.sportsDataEventId || row.EventId}`,
+    id: row.id || `event-${row.sportsDataEventId || row.EventId}`,
     title: row.title || row.Name || row.ShortName || "UFC Event",
     description: row.description || "",
     thumbnail: row.thumbnail || row.ImageUrl || row.PhotoUrl || "",
@@ -394,13 +394,13 @@ async function loadEvents() {
       return;
     }
     if (payload.error) throw new Error(payload.error);
-    throw new Error(`SportsData.io schedule failed with status ${response.status}`);
+    throw new Error(`Live Stats schedule failed with status ${response.status}`);
   } catch (apiError) {
     const client = getSupabaseClient();
     if (!client) {
       if (!sharedEventsWarningShown) {
         sharedEventsWarningShown = true;
-        toast(`Could not load SportsData.io events: ${apiError.message}`);
+        toast(`Could not load Live Stats events: ${apiError.message}`);
       }
       return;
     }
@@ -1835,7 +1835,7 @@ function fighterCard(fighter) {
   const weightClass = fighterValue(fighter.WeightClass || fighter.Division, "MMA");
   const nickname = fighterValue(fighter.Nickname, "");
   const image = fighterImage(fighter);
-  const imageSource = fighter.ImageSource || (fighter.CitoImageUrl ? "Cito UFC" : "SportsData.io");
+  const imageSource = fighter.ImageSource || (fighter.CitoImageUrl ? "Cito UFC" : "Live Stats");
   return `
     <article class="mma-fighter-card" data-fighter-card data-search="${fighterSearchText(fighter).replace(/"/g, "&quot;")}">
       <div class="mma-fighter-media ${image ? "has-api-photo" : "no-photo"}">
@@ -2842,7 +2842,7 @@ function liveRankingsData(fallbackData) {
       koWins: championFighter.TechnicalKnockouts || 0,
       lastFightDate: mmaFightersState.fetchedAt ? new Date(mmaFightersState.fetchedAt).toLocaleDateString() : "Live API",
       nextFightOpponent: "TBD",
-      nextFightEvent: "SportsData.io Live Feed",
+      nextFightEvent: "Live Stats Live Feed",
       nextFightDate: "TBD",
       country: championFighter.Country || "Global",
       subWins: championFighter.Submissions || 0,
@@ -2853,7 +2853,7 @@ function liveRankingsData(fallbackData) {
       rank: index + 1,
       name: fighterDisplayName(fighter),
       record: fighterRecord(fighter),
-      lastFight: `SportsData.io\n${fighter.WeightClass || "MMA"}`,
+      lastFight: `Live Stats\n${fighter.WeightClass || "MMA"}`,
       movement: "-"
     }))
   };
@@ -2891,14 +2891,14 @@ async function loadMmaNews(force = false) {
 
 function renderMmaNewsItems() {
   if (mmaNewsState.loading) {
-    return '<div class="rank-news-item"><h4>Loading live MMA news...</h4><div class="date">SportsData.io</div></div>';
+    return '<div class="rank-news-item"><h4>Loading live MMA news...</h4><div class="date">Live Stats</div></div>';
   }
   const liveUpdates = liveFighterUpdateItems();
   if (!mmaNewsState.news.length) return liveUpdates.slice(0, 3).map(rankNewsCard).join("");
   return mmaNewsState.news.slice(0, 3).map((item) => `
     <div class="rank-news-item">
       <h4>${item.Title || item.Headline || "MMA News Update"}</h4>
-      <div class="date">${item.Updated || item.TimeAgo || item.Published || item.Created || "SportsData.io"}</div>
+      <div class="date">${item.Updated || item.TimeAgo || item.Published || item.Created || "Live Stats"}</div>
     </div>
   `).join("");
 }
@@ -2907,7 +2907,7 @@ function liveFighterUpdateItems() {
   if (!mmaFightersState.fighters.length) {
     return [{
       title: "Loading live fighter updates",
-      detail: "SportsData.io fighter feed is being requested."
+      detail: "Live Stats fighter feed is being requested."
     }];
   }
 
@@ -2925,7 +2925,7 @@ function liveFighterUpdateItems() {
     },
     {
       title: `${fighterDisplayName(titleLeader)} stands out in title-fight data`,
-      detail: `${titleLeader.TitleWins || 0} title wins tracked by SportsData.io`
+      detail: `${titleLeader.TitleWins || 0} title wins tracked by Live Stats`
     },
     {
       title: `${fighterDisplayName(finisher)} tops finish metrics`,
