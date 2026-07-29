@@ -14,6 +14,7 @@ const sportsDataMmaBaseUrl = "https://api.sportsdata.io/v3/mma/scores/json";
 const sportsDataMmaFightersUrl = "https://api.sportsdata.io/v3/mma/scores/json/FightersBasic";
 const sportsDataMmaNewsUrl = "https://api.sportsdata.io/v3/mma/scores/json/News";
 const citoApiKey = process.env.CITO_API_KEY || "";
+const citoUfcEventsUrl = "https://api.citoapi.com/api/v1/ufc/events";
 const defaultAdminEmails = ["adminsaab@ufc.com"];
 const adminEmails = [...new Set([
   ...defaultAdminEmails,
@@ -67,6 +68,153 @@ async function fetchSportsDataMma(pathname) {
     throw error;
   }
   return payload;
+}
+
+async function fetchCitoUfcEvents() {
+  if (!citoApiKey) return [];
+  const response = await fetch(citoUfcEventsUrl, {
+    headers: { "x-api-key": citoApiKey }
+  });
+  if (!response.ok) return [];
+  const payload = await response.json().catch(() => []);
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.events)) return payload.events;
+  return [];
+}
+
+function normalizeEventLookupKey(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/\bvs\.\b/g, "vs")
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function eventNumber(value) {
+  return String(value || "").match(/\bufc\s*(\d{3})\b/i)?.[1] || "";
+}
+
+function eventDateKey(value) {
+  const date = value ? new Date(value) : null;
+  return date && !Number.isNaN(date.getTime()) ? date.toISOString().slice(0, 10) : "";
+}
+
+function compactDateKey(value) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return "";
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const year = String(date.getFullYear()).slice(-2);
+  return `${month}${day}${year}`;
+}
+
+function ufcUploadFolders(value) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return [];
+  const folders = [];
+  [0, -1, -2].forEach((offset) => {
+    const folderDate = new Date(date);
+    folderDate.setMonth(folderDate.getMonth() + offset);
+    const year = folderDate.getFullYear();
+    const month = String(folderDate.getMonth() + 1).padStart(2, "0");
+    const folder = `${year}-${month}`;
+    if (!folders.includes(folder)) folders.push(folder);
+  });
+  return folders;
+}
+
+function eventSlug(value) {
+  return normalizeEventLookupKey(value)
+    .replace(/\bvs\b/g, "vs")
+    .replace(/\s+/g, "-");
+}
+
+function ufcPosterCandidates(event) {
+  const dateKey = compactDateKey(event.eventDate);
+  const slug = eventSlug(event.title);
+  if (!dateKey || !slug) return [];
+
+  const names = [
+    `${dateKey}-${slug}-EVENT-ART.jpg`,
+    `${dateKey}-${slug}-TEMP-HERO.jpg`,
+    `${dateKey}-${slug}-HERO.jpg`,
+    `${dateKey}-${slug}-announcement.jpg`
+  ];
+
+  return ufcUploadFolders(event.eventDate).flatMap((folder) =>
+    names.map((name) => `https://www.ufc.com/images/styles/background_image_sm/s3/${folder}/${name}?h=d1cb525d`)
+  );
+}
+
+function citoEventImage(event) {
+  const image = event?.posterUrl
+    || event?.imageUrl
+    || event?.thumbnailUrl
+    || event?.bannerUrl
+    || event?.coverImageUrl
+    || "";
+  return /ufc_icon\.png|howtowatch-app/i.test(image) ? "" : image;
+}
+
+function buildCitoPosterLookup(events) {
+  const lookup = { byTitle: new Map(), byNumber: new Map(), byDateTitle: new Map() };
+  events.forEach((event) => {
+    const image = citoEventImage(event);
+    if (!image) return;
+
+    [event.title, event.shortTitle, event.name].forEach((title) => {
+      const key = normalizeEventLookupKey(title);
+      if (key && !lookup.byTitle.has(key)) lookup.byTitle.set(key, image);
+    });
+
+    const number = eventNumber(event.title || event.shortTitle || event.slug);
+    if (number && !lookup.byNumber.has(number)) lookup.byNumber.set(number, image);
+
+    const date = eventDateKey(event.eventDate || event.date || event.startDate);
+    const shortTitle = normalizeEventLookupKey(event.shortTitle || event.title);
+    if (date && shortTitle && !lookup.byDateTitle.has(`${date}:${shortTitle}`)) {
+      lookup.byDateTitle.set(`${date}:${shortTitle}`, image);
+    }
+  });
+  return lookup;
+}
+
+function citoPosterForEvent(event, lookup) {
+  const title = event.title || "";
+  const titleKey = normalizeEventLookupKey(title);
+  const headlineKey = normalizeEventLookupKey(title.split(":").slice(1).join(":") || title);
+  const date = eventDateKey(event.eventDate);
+  const number = eventNumber(title);
+  return lookup.byTitle.get(titleKey)
+    || (date && headlineKey ? lookup.byDateTitle.get(`${date}:${headlineKey}`) : "")
+    || (number ? lookup.byNumber.get(number) : "")
+    || "";
+}
+
+function eventPosterCandidates(event, lookup) {
+  return [
+    event.thumbnail,
+    citoPosterForEvent(event, lookup),
+    ...ufcPosterCandidates(event)
+  ].filter((url, index, urls) => url && urls.indexOf(url) === index);
+}
+
+function applyEventPoster(event, lookup) {
+  const posterCandidates = eventPosterCandidates(event, lookup);
+  if (!posterCandidates.length) return event;
+  const poster = posterCandidates[0];
+  if (event.thumbnail === poster) {
+    return { ...event, posterCandidates };
+  }
+  return {
+    ...event,
+    thumbnail: poster,
+    originalImage: poster,
+    posterCandidates,
+    posterSource: poster.includes("citoapi") || poster.includes("ufc.com") ? "UFC Event Art" : "Cito UFC"
+  };
 }
 
 function sportsDataEventStatus(status) {
@@ -167,23 +315,30 @@ app.get("/api/mma/events", async (req, res) => {
     const uniqueEvents = [...new Map(scheduleEvents.map((event) => [event.EventId, event])).values()]
       .sort((a, b) => new Date(a.DateTime || a.Day || 0) - new Date(b.DateTime || b.Day || 0));
 
-    const detailed = await Promise.allSettled(
-      uniqueEvents.map(async (event) => ({
-        event,
-        detail: await fetchSportsDataMma(`Event/${event.EventId}`)
-      }))
-    );
+    const [detailed, citoEvents] = await Promise.all([
+      Promise.allSettled(
+        uniqueEvents.map(async (event) => ({
+          event,
+          detail: await fetchSportsDataMma(`Event/${event.EventId}`)
+        }))
+      ),
+      fetchCitoUfcEvents().catch(() => [])
+    ]);
     const detailsById = new Map(
       detailed
         .filter((result) => result.status === "fulfilled")
         .map((result) => [result.value.event.EventId, result.value.detail])
     );
+    const citoPosterLookup = buildCitoPosterLookup(citoEvents);
 
     res.setHeader("Cache-Control", "no-store");
     res.json({
       fetchedAt: new Date().toISOString(),
       seasons,
-      events: uniqueEvents.map((event) => normalizeSportsDataEvent(event, detailsById.get(event.EventId)))
+      events: uniqueEvents.map((event) => applyEventPoster(
+        normalizeSportsDataEvent(event, detailsById.get(event.EventId)),
+        citoPosterLookup
+      ))
     });
   } catch (error) {
     res.status(error.status || 502).json({

@@ -311,6 +311,9 @@ function mapSportsDataEvent(row) {
     title: row.title || row.Name || row.ShortName || "UFC Event",
     description: row.description || "",
     thumbnail: row.thumbnail || row.ImageUrl || row.PhotoUrl || "",
+    originalImage: row.originalImage || row.original_image || "",
+    posterCandidates: Array.isArray(row.posterCandidates) ? row.posterCandidates : [],
+    posterSource: row.posterSource || row.poster_source || "",
     streamUrl: row.streamUrl || row.stream_url || "",
     venue: row.venue || row.Venue || row.Location || "UFC",
     eventDate: row.eventDate || row.DateTime || row.Day || "",
@@ -510,12 +513,33 @@ function posterStyle(event, index = 0) {
 }
 
 function eventImage(event, fallback = 'assets/fan-khabib-vs-conor.png') {
-  return event?.thumbnail || event?.originalImage || event?.poster_url || fallback;
+  return event?.thumbnail || event?.originalImage || event?.poster_url || event?.posterCandidates?.[0] || fallback;
+}
+
+function eventPosterCandidates(event, fallback = 'assets/fan-khabib-vs-conor.png') {
+  return [
+    event?.thumbnail,
+    event?.originalImage,
+    event?.poster_url,
+    ...(Array.isArray(event?.posterCandidates) ? event.posterCandidates : []),
+    fallback
+  ].filter((url, index, urls) => url && urls.indexOf(url) === index);
+}
+
+function posterCandidateData(event, fallback) {
+  return encodeURIComponent(JSON.stringify(eventPosterCandidates(event, fallback)));
+}
+
+function eventPosterImg(event, alt, className = "event-bg-img", fallback) {
+  const candidates = eventPosterCandidates(event, fallback);
+  const src = candidates[0] || fallback || "";
+  return `<img src="${src}" alt="${alt}" class="${className}" data-poster-candidates="${posterCandidateData(event, fallback)}" data-poster-index="0" onerror="advanceEventPoster(this)" loading="lazy" />`;
 }
 
 function eventPoster(event, index = 0) {
   return `
     <div class="poster" ${posterStyle(event, index)}>
+      ${eventPosterImg(event, event.title || "UFC event poster", "event-bg-img")}
       <div class="poster-visual"></div>
       <div class="fighter-shape"></div>
     </div>
@@ -715,7 +739,7 @@ function mobileHomeEventCard(event) {
       <div class="ue-image-container">
         <span class="ue-badge ue-badge-red">PPV</span>
         <span class="ue-badge ue-badge-yellow">${badgeText}</span>
-        <img src="${eventImage(event)}" alt="${title}" class="ue-poster" />
+        ${eventPosterImg(event, title, "ue-poster")}
       </div>
       <div class="ue-details">
         <h4 class="ue-title">${title}</h4>
@@ -747,6 +771,7 @@ function schedMiniCard(event, isPast = false) {
   
   return `
     <div class="sched-mini-card" style="--event-image: url('${bgImg}');" onclick="setRoute('stream','${event.id}')">
+      ${eventPosterImg(event, title, "event-bg-img")}
       <div class="sched-mini-overlay"></div>
       ${!isPast ? `<div class="sched-mini-badge" style="${isLive ? 'background:#e10600;' : 'background:rgba(225,6,0,0.8);'}">${badgeText}</div>` : ''}
       <div class="sched-mini-content">
@@ -1127,6 +1152,7 @@ function renderLive() {
       <div class="live-grid">
         ${lives.map((event, i) => `
           <div class="live-card ${i === 0 ? 'featured' : ''}" style="--poster: url('${event.thumbnail || 'assets/fan-khabib-vs-conor.png'}')" onclick="setRoute('stream','${event.id}')">
+            ${eventPosterImg(event, event.title, "event-bg-img")}
             <div class="card-overlay"></div>
             <div class="card-content">
               <div class="card-badges">
@@ -1154,6 +1180,7 @@ function renderLive() {
       <div class="upcoming-grid">
         ${upcomings.slice(0,3).map(event => `
           <div class="upcoming-card" style="--poster: url('${eventImage(event)}')" onclick="setRoute('stream','${event.id}')">
+            ${eventPosterImg(event, event.title, "event-bg-img")}
             <div class="card-overlay"></div>
             <div class="card-content">
               <div style="display:flex; justify-content:space-between;">
@@ -3287,6 +3314,16 @@ function render() {
 }
 
 window.setRoute = setRoute;
+window.advanceEventPoster = (img) => {
+  const candidates = JSON.parse(decodeURIComponent(img.dataset.posterCandidates || "%5B%5D"));
+  const nextIndex = Number(img.dataset.posterIndex || 0) + 1;
+  if (nextIndex >= candidates.length) {
+    img.remove();
+    return;
+  }
+  img.dataset.posterIndex = String(nextIndex);
+  img.src = candidates[nextIndex];
+};
 window.setEventFilter = (filter) => {
   eventFilter = filter;
   render();
