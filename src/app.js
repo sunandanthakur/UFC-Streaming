@@ -1,5 +1,5 @@
 const PREFERENCES_KEY = "fightstream-pro-preferences-v1";
-const FRONT_PAGE_IMAGE = "assets/ufc-front-page.jpg";
+const FRONT_PAGE_IMAGE = "assets/FrontPage.png";
 const LOGO_IMAGE = "assets/ufc-logo.png";
 
 const icons = {

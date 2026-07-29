@@ -80,7 +80,7 @@ button {
 
 .home-shell::before {
   z-index: 0;
-  background: url("../assets/ufc-front-page.jpg") center/cover no-repeat;
+  background: url("../assets/FrontPage.png") center/cover no-repeat;
 }
 
 /* Hide large fixed background on small screens to avoid layout issues */

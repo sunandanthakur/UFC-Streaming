@@ -2080,7 +2080,7 @@
 
   /* Full Page Mobile Background */
   .home-page-container {
-    background: url('../assets/ufc-front-page.jpg') center/cover fixed no-repeat !important;
+    background: url('../assets/FrontPage.png') center/cover fixed no-repeat !important;
     min-height: 100vh;
   }
   
@@ -3814,7 +3814,7 @@ img {
     /* Set the background image globally for mobile, with a strong dark overlay */
     background: 
       linear-gradient(to bottom, rgba(10, 10, 10, 0.94), rgba(5, 5, 5, 0.98)),
-      url('../assets/ufc-front-page.jpg') center/cover fixed no-repeat !important;
+      url('../assets/FrontPage.png') center/cover fixed no-repeat !important;
   }
   
   /* Ensure the app-shell is transparent so the body background shows through */

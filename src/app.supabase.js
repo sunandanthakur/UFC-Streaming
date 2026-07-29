@@ -92,7 +92,7 @@ window.openRankingsModal = function(type, champStr) {
 }
 
 const PREFERENCES_KEY = "fightstream-pro-preferences-v1";
-const FRONT_PAGE_IMAGE = "assets/ufc-front-page.jpg";
+const FRONT_PAGE_IMAGE = "assets/FrontPage.png";
 const LOGO_IMAGE = "assets/ufc-logo.png";
 
 const icons = {
@@ -1588,7 +1588,7 @@ function renderAdminEvents() {
         <div class="admin-panel-body" style="padding-top: 0; padding-bottom: 0;">
           ${state.events.length ? state.events.map(event => `
             <div class="pro-event-list-item">
-              <div class="pro-event-img" style="background-image: url('${event.thumbnail || "assets/ufc-front-page.jpg"}');"></div>
+              <div class="pro-event-img" style="background-image: url('${event.thumbnail || "assets/FrontPage.png"}');"></div>
               <div class="pro-event-info">
                 <h4>${event.title}</h4>
                 <div class="pro-event-meta">

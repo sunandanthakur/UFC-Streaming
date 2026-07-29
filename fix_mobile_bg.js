@@ -14,7 +14,7 @@ const fixCSS = `
     /* Set the background image globally for mobile, with a strong dark overlay */
     background: 
       linear-gradient(to bottom, rgba(10, 10, 10, 0.94), rgba(5, 5, 5, 0.98)),
-      url('../assets/ufc-front-page.jpg') center/cover fixed no-repeat !important;
+      url('../assets/FrontPage.png') center/cover fixed no-repeat !important;
   }
   
   /* Ensure the app-shell is transparent so the body background shows through */
