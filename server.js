@@ -154,6 +154,15 @@ app.get("/api/mma/events", async (req, res) => {
     const scheduleEvents = schedules
       .filter((result) => result.status === "fulfilled" && Array.isArray(result.value))
       .flatMap((result) => result.value);
+    const scheduleFailures = schedules.filter((result) => result.status === "rejected");
+
+    if (scheduleEvents.length === 0 && scheduleFailures.length > 0) {
+      const firstFailure = scheduleFailures[0].reason || {};
+      const error = new Error("Could not load SportsData.io MMA schedule.");
+      error.status = firstFailure.status || 502;
+      error.details = firstFailure.details || firstFailure.message;
+      throw error;
+    }
 
     const uniqueEvents = [...new Map(scheduleEvents.map((event) => [event.EventId, event])).values()]
       .sort((a, b) => new Date(a.DateTime || a.Day || 0) - new Date(b.DateTime || b.Day || 0));
