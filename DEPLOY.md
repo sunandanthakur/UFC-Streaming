@@ -7,6 +7,7 @@ Required environment variables (set these in the host):
 - `SUPABASE_ANON_KEY` — your Supabase anon key
 - `SUPABASE_SERVICE_ROLE_KEY` — optional for server-side upserts
 - `SPORTSDATA_MMA_API_KEY` — SportsData.io MMA key used by `/api/mma/fighters`
+- `CITO_API_KEY` — Cito UFC key used for fighter/player images
 - `ADMIN_EMAILS` — comma-separated admin emails (default `adminsaab@ufc.com`)
 - `PORT` — optional (default 4173)
 
@@ -27,7 +28,7 @@ Deploy to Render (recommended simple option)
 
 1. Push this repo to GitHub.
 2. Create a new Web Service in Render using the `render.yaml` blueprint already included.
-3. Set the environment variables `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `ADMIN_EMAILS` (and `MONGODB_URI` if used).
+3. Set the environment variables `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SPORTSDATA_MMA_API_KEY`, `CITO_API_KEY`, and `ADMIN_EMAILS` (and `MONGODB_URI` if used).
 4. Render will run `npm start` per `render.yaml`.
 
 Deploy to Vercel
