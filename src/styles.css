@@ -80,7 +80,12 @@ button {
 
 .home-shell::before {
   z-index: 0;
-  background: url("../assets/FrontPage.png") center/cover no-repeat;
+  background-color: #050505;
+  background-image: url("../assets/backround_desk.png");
+  background-position: center 80px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* Hide large fixed background on small screens to avoid layout issues */

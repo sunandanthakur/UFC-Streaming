@@ -159,13 +159,21 @@
   justify-content: center;
   align-items: center;
   text-align: center;
-  background: transparent;
+  background-color: #060606;
+  background-image:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.74) 0%, rgba(0, 0, 0, 0.32) 46%, rgba(0, 0, 0, 0.14) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0.84) 100%),
+    url('../assets/backround_desk.png');
+  background-position: center 80px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   position: relative;
 }
 .hero-pro-overlay {
   position: absolute;
   inset: 0;
-  background: transparent;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.62) 100%);
 }
 .hero-pro-content {
   position: relative;
@@ -271,7 +279,7 @@
   background: #050505;
 }
 .auth-left {
-  background: url('assets/fan-khabib-vs-conor.png') center/cover;
+  background: url('/assets/fan-khabib-vs-conor.png') center/cover;
   position: relative;
   padding: 80px;
   display: flex;
@@ -750,7 +758,14 @@
     display: none !important;
   }
   .hero-pro {
-    background: transparent;
+    background-color: #060606;
+    background-image:
+      linear-gradient(90deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.38) 46%, rgba(0, 0, 0, 0.16) 100%),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.86) 100%),
+      url('../assets/backround_desk.png');
+    background-position: center 80px;
+    background-size: contain;
+    background-repeat: no-repeat;
     min-height: 100vh;
     padding-bottom: 60px;
   }
@@ -858,6 +873,18 @@
   }
   .hero-desc {
     font-size: 0.95rem;
+  }
+  .hero-pro-content {
+    width: min(100% - 24px, 560px);
+    padding: 0 12px;
+    margin-top: 96px;
+  }
+  .mobile-hero-cards {
+    width: min(100% - 24px, 420px);
+    padding-bottom: 20px;
+  }
+  .live-link-card, .viewers-card {
+    padding: 14px;
   }
 
   .admin-top-stats {
@@ -2080,7 +2107,7 @@
 
   /* Full Page Mobile Background */
   .home-page-container {
-    background: url('../assets/FrontPage.png') center/cover fixed no-repeat !important;
+    background: url('../assets/FrontPage.png') center/contain fixed no-repeat !important;
     min-height: 100vh;
   }
   
@@ -3307,6 +3334,9 @@
 .mma-fighter-card {
   padding: 18px;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .mma-fighter-media {
@@ -3813,8 +3843,8 @@ img {
   body {
     /* Set the background image globally for mobile, with a strong dark overlay */
     background: 
-      linear-gradient(to bottom, rgba(10, 10, 10, 0.94), rgba(5, 5, 5, 0.98)),
-      url('../assets/FrontPage.png') center/cover fixed no-repeat !important;
+      linear-gradient(to bottom, rgba(10, 10, 10, 0.2), rgba(5, 5, 5, 0.8)),
+      url('../assets/FrontPage.png') center/contain fixed no-repeat !important;
   }
   
   /* Ensure the app-shell is transparent so the body background shows through */

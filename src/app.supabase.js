@@ -1888,7 +1888,7 @@ function fighterCard(fighter) {
         ${fighterMetric("Age", fighter.Age)}
         ${fighterMetric("Rank", fighter.Ranking)}
       </div>
-      <button class="btn-red view-profile-btn" style="width:100%; padding:10px; margin-top:16px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="openFighterProfile('${normalizeFighterName(fighterDisplayName(fighter)).replace(/\s+/g, '-')}'); event.stopPropagation();">
+      <button class="btn-red view-profile-btn" style="width:100%; padding:10px; margin-top:auto; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="openFighterProfile('${normalizeFighterName(fighterDisplayName(fighter)).replace(/\s+/g, '-')}'); event.stopPropagation();">
         View Full Profile
       </button>
     </article>
