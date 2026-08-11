@@ -142,17 +142,17 @@ const REMOVED_DEMO_TITLES = new Set([
 const fanWallpapers = [
   { id: "demetrious-johnson", name: "Demetrious Johnson", nickname: "Mighty Mouse", title: "Championship Glory", style: "Freestyle Wrestling, Muay Thai, BJJ", record: "34-4-1", src: "assets/fan-demetrious-johnson.png", position: "center 30%" },
   { id: "daniel-cormier", name: "Daniel Cormier", nickname: "DC", title: "Double Champion", style: "Freestyle Wrestling, Kickboxing", record: "22-3-0 (1 NC)", src: "assets/fan-daniel-cormier.png", position: "center 25%" },
-  { id: "robert-whittaker", name: "Robert Whittaker", nickname: "The Reaper", title: "Middleweight Legend", style: "Karate, Defensive Wrestling", record: "26-7-0", src: "assets/fan-robert-whittaker.png", position: "center 20%" },
-  { id: "khamzat-victory", name: "Khamzat Chimaev", nickname: "Borz", title: "UFC 294 Victory", style: "Freestyle Wrestling, BJJ, Sambo", record: "13-0-0", src: "assets/fan-khamzat-chimaev-victory.png", position: "center 20%" },
+  { id: "robert-whittaker", name: "Robert Whittaker", nickname: "The Reaper", title: "Middleweight Legend", style: "Karate, Defensive Wrestling", record: "27-9-0", src: "assets/fan-robert-whittaker.png", position: "center 20%" },
+  { id: "khamzat-victory", name: "Khamzat Chimaev", nickname: "Borz", title: "UFC 294 Victory", style: "Freestyle Wrestling, BJJ, Sambo", record: "15-1-0", src: "assets/fan-khamzat-chimaev-victory.png", position: "center 20%" },
   { id: "khabib-vs-conor", name: "UFC 229", nickname: "The Biggest Fight", title: "Khabib vs McGregor", style: "Sambo vs Boxing", record: "Khabib 29-0 · Conor 22-6", src: "assets/fan-khabib-vs-conor.png", position: "center 35%" },
-  { id: "khamzat-crouch", name: "Khamzat Chimaev", nickname: "Borz", title: "Octagon Focus", style: "Freestyle Wrestling, BJJ, Sambo", record: "13-0-0", src: "assets/fan-khamzat-chimaev-crouch.png", position: "center 15%" },
+  { id: "khamzat-crouch", name: "Khamzat Chimaev", nickname: "Borz", title: "Octagon Focus", style: "Freestyle Wrestling, BJJ, Sambo", record: "15-1-0", src: "assets/fan-khamzat-chimaev-crouch.png", position: "center 15%" },
   { id: "khabib-eagle", name: "Khabib Nurmagomedov", nickname: "The Eagle", title: "Undefeated Champion", style: "Combat Sambo, Wrestling, Grappling", record: "29-0-0", src: "assets/fan-khabib-nurmagomedov.png", position: "center 25%" },
-  { id: "jon-jones", name: "Jon Jones", nickname: "Bones", title: "Heavyweight King", style: "Wrestling, Muay Thai, BJJ", record: "27-1-0 (1 NC)", src: "assets/fan-jon-jones.png", position: "center 20%" },
-  { id: "tom-aspinall", name: "Tom Aspinall", nickname: "The Asp", title: "Heavyweight Champion", style: "BJJ, Boxing, Wrestling", record: "15-3-0", src: "assets/fan-tom-aspinall.png", position: "center 70%" },
-  { id: "islam-makhachev", name: "Islam Makhachev", nickname: "The Champion", title: "Lightweight Champion", style: "Sambo, Wrestling, Judo", record: "26-1-0", src: "assets/fan-islam-makhachev.png", position: "center 25%" },
-  { id: "alex-pereira", name: "Alex Pereira", nickname: "Poatan", title: "Light Heavyweight Champion", style: "Kickboxing", record: "10-2-0", src: "assets/fan-alex-pereira-flex.jpg", position: "center 20%" },
-  { id: "ilia-topuria", name: "Ilia Topuria", nickname: "El Matador", title: "Featherweight Champion", style: "Wrestling, Boxing", record: "15-0-0", src: "assets/fan-ilia-topuria-oliveira.jpg", position: "center 20%" },
-  { id: "israel-adesanya", name: "Israel Adesanya", nickname: "The Last Stylebender", title: "Middleweight Legend", style: "Kickboxing, Boxing", record: "24-3-0", src: "assets/fan-israel-adesanya-belt.jpg", position: "center 20%" }
+  { id: "jon-jones", name: "Jon Jones", nickname: "Bones", title: "Heavyweight King", style: "Wrestling, Muay Thai, BJJ", record: "28-1-0 (1 NC)", src: "assets/fan-jon-jones.png", position: "center 20%" },
+  { id: "tom-aspinall", name: "Tom Aspinall", nickname: "The Asp", title: "Heavyweight Champion", style: "BJJ, Boxing, Wrestling", record: "15-3-0 (1 NC)", src: "assets/fan-tom-aspinall.png", position: "center 70%" },
+  { id: "islam-makhachev", name: "Islam Makhachev", nickname: "The Champion", title: "Lightweight Champion", style: "Sambo, Wrestling, Judo", record: "28-1-0", src: "assets/fan-islam-makhachev.png", position: "center 25%" },
+  { id: "alex-pereira", name: "Alex Pereira", nickname: "Poatan", title: "Light Heavyweight Champion", style: "Kickboxing", record: "13-4-0", src: "assets/fan-alex-pereira-flex.jpg", position: "center 20%" },
+  { id: "ilia-topuria", name: "Ilia Topuria", nickname: "El Matador", title: "Featherweight Champion", style: "Wrestling, Boxing", record: "17-1-0", src: "assets/fan-ilia-topuria-oliveira.jpg", position: "center 20%" },
+  { id: "israel-adesanya", name: "Israel Adesanya", nickname: "The Last Stylebender", title: "Middleweight Legend", style: "Kickboxing, Boxing", record: "24-6-0", src: "assets/fan-israel-adesanya-belt.jpg", position: "center 20%" }
 ];
 
 const state = loadState();
