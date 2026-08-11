@@ -140,6 +140,8 @@ const REMOVED_DEMO_TITLES = new Set([
 ]);
 
 const fanWallpapers = [
+  { id: "justin-gaethje-bmf", name: "Justin Gaethje", nickname: "The Highlight", title: "BMF Champion", style: "Freestyle Wrestling, Boxing", record: "25-5-0", src: "assets/fan-justin-gaethje-bmf.jpg", position: "center 20%" },
+  { id: "conor-mcgregor-octagon", name: "Conor McGregor", nickname: "The Notorious", title: "Octagon Returns", style: "Boxing, Taekwondo", record: "22-6-0", src: "assets/fan-conor-mcgregor-octagon.jpg", position: "center 20%" },
   { id: "arman-tsarukyan-stool", name: "Arman Tsarukyan", nickname: "Ahalkalakets", title: "Heavy Bag Focus", style: "Freestyle Wrestling", record: "22-3-0", src: "assets/fan-arman-tsarukyan-stool.jpg", position: "center 20%" },
   { id: "jon-jones-roar", name: "Jon Jones", nickname: "Bones", title: "The Roar", style: "Wrestling, Muay Thai, BJJ", record: "28-1-0 (1 NC)", src: "assets/fan-jon-jones-roar.jpg", position: "center 20%" },
   { id: "conor-mcgregor-stance", name: "Conor McGregor", nickname: "The Notorious", title: "Champ Champ Stance", style: "Boxing, Taekwondo", record: "22-6-0", src: "assets/fan-conor-mcgregor-stance.jpg", position: "center 20%" },
