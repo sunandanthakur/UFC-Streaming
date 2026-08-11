@@ -140,6 +140,10 @@ const REMOVED_DEMO_TITLES = new Set([
 ]);
 
 const fanWallpapers = [
+  { id: "conor-mcgregor-stool", name: "Conor McGregor", nickname: "The Notorious", title: "Focused on the Stool", style: "Boxing, Taekwondo", record: "22-6-0", src: "assets/fan-conor-mcgregor-stool.jpg", position: "center 20%" },
+  { id: "arman-tsarukyan", name: "Arman Tsarukyan", nickname: "Ahalkalakets", title: "Ready for War", style: "Freestyle Wrestling", record: "22-3-0", src: "assets/fan-arman-tsarukyan.jpg", position: "center 20%" },
+  { id: "jon-jones-crouch", name: "Jon Jones", nickname: "Bones", title: "Predator Stance", style: "Wrestling, Muay Thai, BJJ", record: "28-1-0 (1 NC)", src: "assets/fan-jon-jones-crouch.jpg", position: "center 20%" },
+  { id: "yoel-romero-smile", name: "Yoel Romero", nickname: "Soldier of God", title: "See You Soon Boi", style: "Freestyle Wrestling", record: "16-7-0", src: "assets/fan-yoel-romero.jpg", position: "center 20%" },
   { id: "demetrious-johnson", name: "Demetrious Johnson", nickname: "Mighty Mouse", title: "Championship Glory", style: "Freestyle Wrestling, Muay Thai, BJJ", record: "34-4-1", src: "assets/fan-demetrious-johnson.png", position: "center 30%" },
   { id: "daniel-cormier", name: "Daniel Cormier", nickname: "DC", title: "Double Champion", style: "Freestyle Wrestling, Kickboxing", record: "22-3-0 (1 NC)", src: "assets/fan-daniel-cormier.png", position: "center 25%" },
   { id: "robert-whittaker", name: "Robert Whittaker", nickname: "The Reaper", title: "Middleweight Legend", style: "Karate, Defensive Wrestling", record: "27-9-0", src: "assets/fan-robert-whittaker.png", position: "center 20%" },
