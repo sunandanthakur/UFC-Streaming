@@ -140,6 +140,9 @@ const REMOVED_DEMO_TITLES = new Set([
 ]);
 
 const fanWallpapers = [
+  { id: "nick-diaz", name: "Nick Diaz", nickname: "Diablo", title: "Stockton Slap", style: "BJJ, Boxing", record: "26-10-0 (2 NC)", src: "assets/fan-nick-diaz.jpg", position: "center 20%" },
+  { id: "charles-oliveira-back", name: "Charles Oliveira", nickname: "Do Bronx", title: "The Champion Has a Name", style: "BJJ, Muay Thai", record: "37-11-0 (1 NC)", src: "assets/fan-charles-oliveira-back.jpg", position: "center 20%" },
+  { id: "alexander-volkanovski-blood", name: "Alexander Volkanovski", nickname: "The Great", title: "Featherweight King", style: "Striking, Wrestling", record: "28-4-0", src: "assets/fan-alexander-volkanovski-blood.jpg", position: "center 20%" },
   { id: "justin-gaethje-bmf", name: "Justin Gaethje", nickname: "The Highlight", title: "BMF Champion", style: "Freestyle Wrestling, Boxing", record: "25-5-0", src: "assets/fan-justin-gaethje-bmf.jpg", position: "center 20%" },
   { id: "conor-mcgregor-octagon", name: "Conor McGregor", nickname: "The Notorious", title: "Octagon Returns", style: "Boxing, Taekwondo", record: "22-6-0", src: "assets/fan-conor-mcgregor-octagon.jpg", position: "center 20%" },
   { id: "arman-tsarukyan-stool", name: "Arman Tsarukyan", nickname: "Ahalkalakets", title: "Heavy Bag Focus", style: "Freestyle Wrestling", record: "22-3-0", src: "assets/fan-arman-tsarukyan-stool.jpg", position: "center 20%" },
