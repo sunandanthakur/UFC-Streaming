@@ -141,7 +141,6 @@ const REMOVED_DEMO_TITLES = new Set([
 
 const fanWallpapers = [
   { id: "arman-tsarukyan-stool", name: "Arman Tsarukyan", nickname: "Ahalkalakets", title: "Heavy Bag Focus", style: "Freestyle Wrestling", record: "22-3-0", src: "assets/fan-arman-tsarukyan-stool.jpg", position: "center 20%" },
-  { id: "conor-mcgregor-ufc205", name: "Conor McGregor", nickname: "The Notorious", title: "History at MSG", style: "Boxing, Taekwondo", record: "22-6-0", src: "assets/fan-conor-mcgregor-ufc205.jpg", position: "center 20%" },
   { id: "jon-jones-roar", name: "Jon Jones", nickname: "Bones", title: "The Roar", style: "Wrestling, Muay Thai, BJJ", record: "28-1-0 (1 NC)", src: "assets/fan-jon-jones-roar.jpg", position: "center 20%" },
   { id: "conor-mcgregor-stance", name: "Conor McGregor", nickname: "The Notorious", title: "Champ Champ Stance", style: "Boxing, Taekwondo", record: "22-6-0", src: "assets/fan-conor-mcgregor-stance.jpg", position: "center 20%" },
   { id: "lawler-macdonald", name: "UFC 189", nickname: "The Blood Bath", title: "Lawler vs MacDonald II", style: "Iconic Striking War", record: "Lawler 30-16 · Rory 23-10-1", src: "assets/fan-lawler-macdonald.jpg", position: "center 20%" },
