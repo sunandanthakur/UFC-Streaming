@@ -36,6 +36,5 @@ const fixCSS = `
   white-space: nowrap;
 }
 `;
-
 fs.writeFileSync(cssFile, css + fixCSS);
 console.log('Fighter card overflow fix applied.');
