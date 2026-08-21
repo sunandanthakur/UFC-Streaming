@@ -3,7 +3,6 @@
 Premium mobile-first UFC streaming app prototype with a dark sports UI, user event discovery, embedded stream playback, and an administrator dashboard for publishing live events.
 
 ## Shared MongoDB backend
-
 This app now stores events in MongoDB through a Node/Express API. When you deploy one copy of the app with one MongoDB database, every visitor sees the same published events.
 
 1. Create a MongoDB Atlas database and copy its connection string.
